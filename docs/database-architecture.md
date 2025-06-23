@@ -69,14 +69,14 @@ impl Database {
     pub async fn new(database_url: &str) -> Result<Self>
     pub async fn new_production(database_url: &str) -> Result<Self>
     pub async fn new_high_frequency_trading(database_url: &str) -> Result<Self>
-    
+
     // Health and monitoring
     pub fn health_monitor(&self) -> DatabaseHealthMonitor
     pub async fn comprehensive_health_check(&self) -> Result<HealthReport>
-    
+
     // Performance testing
     pub fn performance_test_manager(&self) -> PerformanceTestManager
-    
+
     // Specialized managers
     pub fn optimization_manager(&self) -> OptimizationManager
     pub fn advanced_index_manager(&self) -> AdvancedIndexManager
@@ -336,13 +336,13 @@ pub struct ConnectionPoolManager {
 impl ConnectionPoolManager {
     // Pool creation with optimization
     pub async fn new(database_url: &str, config: Option<PoolConfig>) -> Result<Self>
-    
+
     // Health monitoring
     pub async fn health_check(&self) -> Result<PoolHealthStatus>
-    
+
     // Performance metrics
     pub fn get_metrics(&self) -> &PoolMetrics
-    
+
     // Auto-tuning capabilities
     pub async fn auto_tune(&mut self) -> Result<()>
 }

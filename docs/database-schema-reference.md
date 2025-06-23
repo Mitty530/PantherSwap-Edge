@@ -257,24 +257,24 @@ SELECT create_hypertable('risk_metrics', 'timestamp', chunk_time_interval => INT
 **Time-Series Performance Indexes**:
 ```sql
 -- Market ticks optimized for trading queries
-CREATE INDEX CONCURRENTLY idx_market_ticks_instrument_time 
+CREATE INDEX CONCURRENTLY idx_market_ticks_instrument_time
 ON market_ticks (instrument_id, timestamp DESC);
 
-CREATE INDEX CONCURRENTLY idx_market_ticks_provider_time 
+CREATE INDEX CONCURRENTLY idx_market_ticks_provider_time
 ON market_ticks (provider, timestamp DESC);
 
 -- AI predictions for model performance analysis
-CREATE INDEX CONCURRENTLY idx_ai_predictions_model_time 
+CREATE INDEX CONCURRENTLY idx_ai_predictions_model_time
 ON ai_predictions (model_type, timestamp DESC);
 
-CREATE INDEX CONCURRENTLY idx_ai_predictions_confidence 
+CREATE INDEX CONCURRENTLY idx_ai_predictions_confidence
 ON ai_predictions (confidence_score DESC) WHERE confidence_score > 0.8;
 
 -- Trading signals for strategy analysis
-CREATE INDEX CONCURRENTLY idx_trading_signals_strategy_time 
+CREATE INDEX CONCURRENTLY idx_trading_signals_strategy_time
 ON trading_signals (strategy_type, timestamp DESC);
 
-CREATE INDEX CONCURRENTLY idx_trading_signals_confidence 
+CREATE INDEX CONCURRENTLY idx_trading_signals_confidence
 ON trading_signals (confidence_score DESC, signal_type);
 ```
 
@@ -283,38 +283,38 @@ ON trading_signals (confidence_score DESC, signal_type);
 **BRIN Indexes for Large Tables**:
 ```sql
 -- Block Range Indexes for time-series data
-CREATE INDEX CONCURRENTLY idx_market_ticks_timestamp_brin 
+CREATE INDEX CONCURRENTLY idx_market_ticks_timestamp_brin
 ON market_ticks USING BRIN (timestamp);
 
-CREATE INDEX CONCURRENTLY idx_order_book_timestamp_brin 
+CREATE INDEX CONCURRENTLY idx_order_book_timestamp_brin
 ON order_book_snapshots USING BRIN (timestamp);
 ```
 
 **GIN Indexes for JSONB**:
 ```sql
 -- JSONB indexes for metadata searches
-CREATE INDEX CONCURRENTLY idx_market_ticks_raw_data_gin 
+CREATE INDEX CONCURRENTLY idx_market_ticks_raw_data_gin
 ON market_ticks USING GIN (raw_data);
 
-CREATE INDEX CONCURRENTLY idx_ai_predictions_features_gin 
+CREATE INDEX CONCURRENTLY idx_ai_predictions_features_gin
 ON ai_predictions USING GIN (feature_importance);
 ```
 
 **Partial Indexes for Performance**:
 ```sql
 -- High-confidence predictions only
-CREATE INDEX CONCURRENTLY idx_ai_predictions_high_confidence 
-ON ai_predictions (timestamp DESC, predicted_price) 
+CREATE INDEX CONCURRENTLY idx_ai_predictions_high_confidence
+ON ai_predictions (timestamp DESC, predicted_price)
 WHERE confidence_score > 0.9;
 
 -- Recent trading signals
-CREATE INDEX CONCURRENTLY idx_trading_signals_recent 
-ON trading_signals (instrument_id, timestamp DESC) 
+CREATE INDEX CONCURRENTLY idx_trading_signals_recent
+ON trading_signals (instrument_id, timestamp DESC)
 WHERE timestamp > NOW() - INTERVAL '24 hours';
 
 -- Large trades only
-CREATE INDEX CONCURRENTLY idx_trade_executions_large 
-ON trade_executions (timestamp DESC, quantity) 
+CREATE INDEX CONCURRENTLY idx_trade_executions_large
+ON trade_executions (timestamp DESC, quantity)
 WHERE quantity > 1000;
 ```
 
@@ -324,21 +324,21 @@ WHERE quantity > 1000;
 
 ```sql
 -- Instrument references
-ALTER TABLE market_ticks 
-ADD CONSTRAINT fk_market_ticks_instrument 
+ALTER TABLE market_ticks
+ADD CONSTRAINT fk_market_ticks_instrument
 FOREIGN KEY (instrument_id) REFERENCES instruments(id);
 
-ALTER TABLE ai_predictions 
-ADD CONSTRAINT fk_ai_predictions_instrument 
+ALTER TABLE ai_predictions
+ADD CONSTRAINT fk_ai_predictions_instrument
 FOREIGN KEY (instrument_id) REFERENCES instruments(id);
 
-ALTER TABLE trading_signals 
-ADD CONSTRAINT fk_trading_signals_instrument 
+ALTER TABLE trading_signals
+ADD CONSTRAINT fk_trading_signals_instrument
 FOREIGN KEY (instrument_id) REFERENCES instruments(id);
 
 -- Signal to execution tracking
-ALTER TABLE trade_executions 
-ADD CONSTRAINT fk_trade_executions_signal 
+ALTER TABLE trade_executions
+ADD CONSTRAINT fk_trade_executions_signal
 FOREIGN KEY (signal_id) REFERENCES trading_signals(id);
 ```
 
@@ -346,30 +346,30 @@ FOREIGN KEY (signal_id) REFERENCES trading_signals(id);
 
 ```sql
 -- Data quality constraints
-ALTER TABLE market_ticks 
-ADD CONSTRAINT chk_market_ticks_quality_score 
+ALTER TABLE market_ticks
+ADD CONSTRAINT chk_market_ticks_quality_score
 CHECK (data_quality_score >= 0.0 AND data_quality_score <= 1.0);
 
-ALTER TABLE market_ticks 
-ADD CONSTRAINT chk_market_ticks_spread_positive 
+ALTER TABLE market_ticks
+ADD CONSTRAINT chk_market_ticks_spread_positive
 CHECK (spread >= 0);
 
 -- Confidence score constraints
-ALTER TABLE ai_predictions 
-ADD CONSTRAINT chk_ai_predictions_confidence 
+ALTER TABLE ai_predictions
+ADD CONSTRAINT chk_ai_predictions_confidence
 CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0);
 
-ALTER TABLE trading_signals 
-ADD CONSTRAINT chk_trading_signals_confidence 
+ALTER TABLE trading_signals
+ADD CONSTRAINT chk_trading_signals_confidence
 CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0);
 
 -- Trade execution constraints
-ALTER TABLE trade_executions 
-ADD CONSTRAINT chk_trade_executions_side 
+ALTER TABLE trade_executions
+ADD CONSTRAINT chk_trade_executions_side
 CHECK (side IN ('BUY', 'SELL'));
 
-ALTER TABLE trade_executions 
-ADD CONSTRAINT chk_trade_executions_quantity_positive 
+ALTER TABLE trade_executions
+ADD CONSTRAINT chk_trade_executions_quantity_positive
 CHECK (quantity > 0);
 ```
 
@@ -379,21 +379,21 @@ CHECK (quantity > 0);
 
 ```sql
 -- Market ticks: High-frequency data, 1-hour chunks
-SELECT create_hypertable('market_ticks', 'timestamp', 
+SELECT create_hypertable('market_ticks', 'timestamp',
     chunk_time_interval => INTERVAL '1 hour',
     create_default_indexes => FALSE);
 
 -- Order book: Very high-frequency, 30-minute chunks
-SELECT create_hypertable('order_book_snapshots', 'timestamp', 
+SELECT create_hypertable('order_book_snapshots', 'timestamp',
     chunk_time_interval => INTERVAL '30 minutes',
     create_default_indexes => FALSE);
 
 -- Trading signals: Moderate frequency, 1-hour chunks
-SELECT create_hypertable('trading_signals', 'timestamp', 
+SELECT create_hypertable('trading_signals', 'timestamp',
     chunk_time_interval => INTERVAL '1 hour');
 
 -- AI predictions: Lower frequency, 6-hour chunks
-SELECT create_hypertable('ai_predictions', 'timestamp', 
+SELECT create_hypertable('ai_predictions', 'timestamp',
     chunk_time_interval => INTERVAL '6 hours');
 ```
 
@@ -429,7 +429,7 @@ SELECT add_retention_policy('risk_metrics', INTERVAL '1095 days'); -- 3 years
 -- 1-minute OHLCV aggregates
 CREATE MATERIALIZED VIEW market_ticks_1min
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
     time_bucket('1 minute', timestamp) AS bucket,
     instrument_id,
     provider,
@@ -446,7 +446,7 @@ GROUP BY bucket, instrument_id, provider;
 -- 5-minute aggregates
 CREATE MATERIALIZED VIEW market_ticks_5min
 WITH (timescaledb.continuous) AS
-SELECT 
+SELECT
     time_bucket('5 minutes', timestamp) AS bucket,
     instrument_id,
     provider,

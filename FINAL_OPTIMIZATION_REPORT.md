@@ -9,7 +9,7 @@
 ### AI Model Accuracy Improvements
 ```
 LSTM Time Series Model:     68-72% → 78-85% (+10-13% improvement)
-HMM Regime Detection:       65-70% → 75-82% (+10-12% improvement)  
+HMM Regime Detection:       65-70% → 75-82% (+10-12% improvement)
 RL Trading Agent:           70-75% → 80-88% (+10-13% improvement)
 Overall System Accuracy:   68-72% → 78-85% (+10-13% improvement)
 ```

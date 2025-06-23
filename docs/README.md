@@ -60,15 +60,15 @@ use pantherswap_edge::database::Database;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Connect to database
     let database = Database::new_development(&std::env::var("DATABASE_URL")?).await?;
-    
+
     // Perform health check
     let is_healthy = database.health_check().await?;
     println!("Database healthy: {}", is_healthy);
-    
+
     // Get pool statistics
     let stats = database.pool_stats();
     println!("Active connections: {}/{}", stats.active, stats.max_size);
-    
+
     Ok(())
 }
 ```

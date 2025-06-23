@@ -11,7 +11,7 @@
 ### 2. **Alpaca Module References Removal**
 - **Problem**: Multiple references to non-existent `crate::market_data::alpaca` module
 - **Solution**: Removed/commented out all Alpaca-related functionality to focus on IG Trading
-- **Files Modified**: 
+- **Files Modified**:
   - `src/trading/execution.rs` - Removed Alpaca execution methods
   - `src/database/queries.rs` - Commented out Alpaca position functions
 - **Impact**: Eliminated 30+ compilation errors related to missing Alpaca module
@@ -32,7 +32,7 @@
 - **Problem**: Execution engine had extensive Alpaca integration code causing compilation errors
 - **Solution**: Replaced with IG Trading-focused implementation
 - **Files Modified**: `src/trading/execution.rs`
-- **Changes**: 
+- **Changes**:
   - Removed 80+ lines of Alpaca-specific methods
   - Simplified execution flow to focus on IG Trading
   - Updated status reporting to reflect IG Trading integration

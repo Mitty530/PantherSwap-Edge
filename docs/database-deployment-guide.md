@@ -501,15 +501,15 @@ echo "Recovery database: $NEW_DATABASE"
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
 -- Analyze slow queries
-SELECT 
+SELECT
     query,
     calls,
     total_time,
     mean_time,
     rows
-FROM pg_stat_statements 
+FROM pg_stat_statements
 WHERE mean_time > 100  -- Queries taking more than 100ms
-ORDER BY mean_time DESC 
+ORDER BY mean_time DESC
 LIMIT 10;
 
 -- Update table statistics
@@ -523,7 +523,7 @@ REINDEX DATABASE pantherswap_prod;
 
 ```sql
 -- Find missing indexes
-SELECT 
+SELECT
     schemaname,
     tablename,
     seq_scan,
@@ -531,20 +531,20 @@ SELECT
     idx_scan,
     idx_tup_fetch,
     seq_tup_read / seq_scan AS avg_seq_read
-FROM pg_stat_user_tables 
-WHERE seq_scan > 0 
+FROM pg_stat_user_tables
+WHERE seq_scan > 0
 ORDER BY seq_tup_read DESC;
 
 -- Find unused indexes
-SELECT 
+SELECT
     schemaname,
     tablename,
     indexname,
     idx_scan,
     idx_tup_read,
     idx_tup_fetch
-FROM pg_stat_user_indexes 
-WHERE idx_scan = 0 
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
 ORDER BY pg_relation_size(indexrelid) DESC;
 ```
 
@@ -553,7 +553,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 ```rust
 // Monitor pool performance
 let pool_stats = database.pool_stats();
-println!("Pool utilization: {:.1}%", 
+println!("Pool utilization: {:.1}%",
          (pool_stats.active as f64 / pool_stats.max_size as f64) * 100.0);
 
 // Auto-tune pool size based on load
@@ -617,16 +617,16 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO pantherswap_backup;
 SELECT count(*) FROM pg_stat_activity WHERE state = 'active';
 
 -- Kill long-running queries
-SELECT pg_terminate_backend(pid) 
-FROM pg_stat_activity 
-WHERE state = 'active' 
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE state = 'active'
 AND query_start < NOW() - INTERVAL '5 minutes';
 ```
 
 **Slow Queries**:
 ```sql
 -- Find blocking queries
-SELECT 
+SELECT
     blocked_locks.pid AS blocked_pid,
     blocked_activity.usename AS blocked_user,
     blocking_locks.pid AS blocking_pid,
@@ -644,20 +644,20 @@ WHERE NOT blocked_locks.granted;
 ```bash
 # Check database sizes
 sudo -u postgres psql -c "
-SELECT 
+SELECT
     datname,
     pg_size_pretty(pg_database_size(datname)) as size
-FROM pg_database 
+FROM pg_database
 ORDER BY pg_database_size(datname) DESC;"
 
 # Check table sizes
 sudo -u postgres psql pantherswap_prod -c "
-SELECT 
+SELECT
     schemaname,
     tablename,
     pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-FROM pg_tables 
-ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC 
+FROM pg_tables
+ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
 LIMIT 10;"
 ```
 

@@ -94,7 +94,7 @@ New Features Added:
 ```
 Market Condition → Execution Style:
 - High liquidity + small orders → Aggressive execution
-- High volatility/wide spreads → Passive execution  
+- High volatility/wide spreads → Passive execution
 - Large orders → TWAP execution
 - Medium orders → Iceberg execution
 ```

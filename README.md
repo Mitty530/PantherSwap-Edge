@@ -210,7 +210,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 **Support**
 
-- 📧 Email: support@pantherswap-edge.com
+- 📧 Email: <support@pantherswap-edge.com>
 - 💬 Discord: [PantherSwap Community](https://discord.gg/pantherswap)
 - 📖 Documentation: [docs.pantherswap-edge.com](https://docs.pantherswap-edge.com)
 

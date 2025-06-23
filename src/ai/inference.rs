@@ -306,8 +306,8 @@ pub struct InferenceEngine {
 impl InferenceEngine {
     /// Create a new inference engine
     pub fn new(config: InferenceConfig) -> Self {
-        let (request_sender, request_receiver) = mpsc::unbounded_channel();
-        let (result_sender, result_receiver) = mpsc::unbounded_channel();
+        let (request_sender, _request_receiver) = mpsc::unbounded_channel();
+        let (_result_sender, result_receiver) = mpsc::unbounded_channel();
 
         Self {
             config: config.clone(),
@@ -598,6 +598,26 @@ impl InferenceEngine {
                     // Balanced approach in normal markets
                     // No adjustment needed
                 },
+                crate::database::types::RegimeType::Bullish => {
+                    // In bullish markets, slightly favor LSTM
+                    lstm_weight *= 1.1;
+                    hmm_weight *= 0.95;
+                },
+                crate::database::types::RegimeType::Bearish => {
+                    // In bearish markets, slightly favor RL
+                    rl_weight *= 1.1;
+                    hmm_weight *= 1.05;
+                },
+                crate::database::types::RegimeType::Sideways => {
+                    // In sideways markets, balanced approach
+                    // No adjustment needed
+                },
+                crate::database::types::RegimeType::HighVolatility => {
+                    // Similar to volatile markets
+                    lstm_weight *= 0.8;
+                    hmm_weight *= 1.1;
+                    rl_weight *= 1.3;
+                },
             }
         }
 
@@ -745,8 +765,11 @@ impl InferenceEngine {
             let hmm_performance_factor = self.get_hmm_performance_factor(&metrics).await;
             signal.regime_signal = Some(RegimeSignal {
                 current_regime: regime_signal.current_regime.clone(),
+                regime: regime_signal.current_regime.clone(), // Alias for backward compatibility
                 transition_probability: regime_signal.transition_probability,
                 confidence: regime_signal.confidence * hmm_performance_factor,
+                regime_strength: regime_signal.confidence * hmm_performance_factor, // Alias for confidence
+                expected_duration_minutes: 30, // Default duration
                 timestamp: regime_signal.timestamp,
             });
         }
@@ -825,6 +848,30 @@ impl InferenceEngine {
             },
             RegimeType::Normal => {
                 // In normal markets, use balanced approach (no adjustment)
+            },
+            RegimeType::Bullish => {
+                // In bullish markets, slightly favor LSTM predictions
+                for prediction in &mut signal.price_predictions {
+                    prediction.confidence_score *= 1.05;
+                }
+            },
+            RegimeType::Bearish => {
+                // In bearish markets, slightly favor RL agent
+                if let Some(rl_rec) = &mut signal.rl_recommendation {
+                    signal.rl_recommendation = Some(RLRecommendation {
+                        action: rl_rec.action.clone(),
+                        confidence: rl_rec.confidence * 1.05,
+                        expected_reward: rl_rec.expected_reward,
+                    });
+                }
+            },
+            RegimeType::Sideways => {
+                // In sideways markets, reduce all confidences slightly
+                signal.confidence_score *= 0.95;
+            },
+            RegimeType::HighVolatility => {
+                // Similar to volatile markets
+                signal.confidence_score *= 0.8;
             },
         }
 

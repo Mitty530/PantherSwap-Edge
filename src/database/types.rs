@@ -12,6 +12,7 @@ pub enum SignalType {
     Buy,
     Sell,
     Hold,
+    AI, // Added missing AI variant
 }
 
 impl std::fmt::Display for SignalType {
@@ -20,6 +21,7 @@ impl std::fmt::Display for SignalType {
             SignalType::Buy => write!(f, "BUY"),
             SignalType::Sell => write!(f, "SELL"),
             SignalType::Hold => write!(f, "HOLD"),
+            SignalType::AI => write!(f, "AI"),
         }
     }
 }
@@ -92,6 +94,17 @@ pub enum OrderType {
     StopLimit,
 }
 
+impl std::fmt::Display for OrderType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OrderType::Market => write!(f, "Market"),
+            OrderType::Limit => write!(f, "Limit"),
+            OrderType::Stop => write!(f, "Stop"),
+            OrderType::StopLimit => write!(f, "StopLimit"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum TimeInForce {
     #[default]
@@ -101,12 +114,34 @@ pub enum TimeInForce {
     DAY, // Day Order
 }
 
+impl std::fmt::Display for TimeInForce {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TimeInForce::GTC => write!(f, "GTC"),
+            TimeInForce::IOC => write!(f, "IOC"),
+            TimeInForce::FOK => write!(f, "FOK"),
+            TimeInForce::DAY => write!(f, "DAY"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum ExecutionStyle {
     Aggressive,    // Execute immediately
     Passive,       // Wait for better prices
     Iceberg,       // Hidden size execution
     TWAP,          // Time-weighted average price
+}
+
+impl std::fmt::Display for ExecutionStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ExecutionStyle::Aggressive => write!(f, "Aggressive"),
+            ExecutionStyle::Passive => write!(f, "Passive"),
+            ExecutionStyle::Iceberg => write!(f, "Iceberg"),
+            ExecutionStyle::TWAP => write!(f, "TWAP"),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

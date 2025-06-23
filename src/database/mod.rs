@@ -15,7 +15,7 @@ pub mod materialized_views;
 pub mod pgbouncer_integration;
 pub mod connection_cache;
 pub mod optimization_validator;
-pub mod alpaca_logging;
+
 // Temporarily disabled validation modules due to type conversion issues
 // pub mod validation;
 // pub mod data_quality;
@@ -453,14 +453,125 @@ impl Database {
         query_monitor::QueryPerformanceMonitor::new(self.pool.clone(), Some(config))
     }
 
-    /// Create an Alpaca logger for comprehensive trading activity logging
-    pub fn alpaca_logger(&self) -> alpaca_logging::AlpacaLogger {
-        alpaca_logging::AlpacaLogger::new(self.clone())
+    // ============================================================================
+    // MISSING METHODS FOR COMPATIBILITY
+    // ============================================================================
+
+    /// Store market tick data (delegates to query manager)
+    pub async fn store_market_tick(&self, tick: &types::MarketTick) -> Result<()> {
+        self.query_manager().insert_market_tick(tick).await
     }
 
-    /// Initialize Alpaca logging tables
-    pub async fn setup_alpaca_logging(&self) -> Result<()> {
-        let logger = self.alpaca_logger();
-        logger.create_tables().await
+    /// Get market ticks by symbol with time range
+    pub async fn get_market_ticks_by_symbol(&self, symbol: &str, hours: i64) -> Result<Vec<types::MarketTick>> {
+        // First get the instrument by symbol
+        if let Some(instrument) = self.query_manager().get_instrument_by_symbol(symbol).await? {
+            let end_time = chrono::Utc::now();
+            let start_time = end_time - chrono::Duration::hours(hours);
+            self.query_manager().get_market_ticks_range(
+                instrument.id,
+                start_time,
+                end_time,
+                None
+            ).await
+        } else {
+            Ok(Vec::new())
+        }
+    }
+
+    /// Get market ticks for instrument with time range
+    pub async fn get_market_ticks_for_instrument(
+        &self,
+        instrument_id: uuid::Uuid,
+        start_time: Option<chrono::DateTime<chrono::Utc>>,
+        end_time: Option<chrono::DateTime<chrono::Utc>>,
+        limit: Option<i64>,
+    ) -> Result<Vec<types::MarketTick>> {
+        self.query_manager().get_market_ticks_for_instrument(
+            instrument_id,
+            start_time,
+            end_time,
+            limit
+        ).await
+    }
+
+    /// Get latest market ticks
+    pub async fn get_latest_market_ticks(
+        &self,
+        instrument_id: Option<uuid::Uuid>,
+        limit: Option<i64>
+    ) -> Result<Vec<types::MarketTick>> {
+        self.query_manager().get_latest_market_ticks(instrument_id, limit).await
+    }
+
+    /// Insert trading signal
+    pub async fn insert_trading_signal(&self, signal: &types::TradingSignal) -> Result<()> {
+        self.query_manager().insert_trading_signal(signal).await
+    }
+
+    /// Insert AI prediction
+    pub async fn insert_ai_prediction(&self, prediction: &types::AIPrediction) -> Result<()> {
+        self.query_manager().insert_ai_prediction(prediction).await
+    }
+
+    /// Get instruments with filters
+    pub async fn get_instruments_with_filters(
+        &self,
+        instrument_type: Option<&str>,
+        is_active: Option<bool>,
+        base_currency: Option<&str>,
+        quote_currency: Option<&str>,
+        limit: Option<i64>,
+        offset: Option<i64>,
+    ) -> Result<Vec<types::Instrument>> {
+        self.query_manager().get_instruments_with_filters(
+            instrument_type,
+            is_active,
+            base_currency,
+            quote_currency,
+            limit,
+            offset
+        ).await
+    }
+
+    /// Get instrument by symbol
+    pub async fn get_instrument_by_symbol(&self, symbol: &str) -> Result<Option<types::Instrument>> {
+        self.query_manager().get_instrument_by_symbol(symbol).await
+    }
+
+    /// Get instrument by ID
+    pub async fn get_instrument_by_id(&self, id: uuid::Uuid) -> Result<Option<types::Instrument>> {
+        self.query_manager().get_instrument_by_id(id).await
+    }
+
+    /// Insert instrument
+    pub async fn insert_instrument(&self, instrument: &types::Instrument) -> Result<uuid::Uuid> {
+        self.query_manager().insert_instrument(instrument).await
+    }
+
+    /// Get active instruments
+    pub async fn get_active_instruments(&self) -> Result<Vec<types::Instrument>> {
+        self.query_manager().get_active_instruments().await
+    }
+
+    /// Batch insert market ticks
+    pub async fn batch_insert_market_ticks(&self, ticks: &[types::MarketTick]) -> Result<u64> {
+        self.query_manager().batch_insert_market_ticks(ticks).await
+    }
+
+    /// Get latest market tick for instrument
+    pub async fn get_latest_market_tick(&self, instrument_id: uuid::Uuid) -> Result<Option<types::MarketTick>> {
+        self.query_manager().get_latest_market_tick(instrument_id).await
+    }
+
+    /// Get OHLCV data
+    pub async fn get_ohlcv_data(
+        &self,
+        instrument_id: uuid::Uuid,
+        bucket_size: &str,
+        start_time: chrono::DateTime<chrono::Utc>,
+        end_time: chrono::DateTime<chrono::Utc>
+    ) -> Result<Vec<(chrono::DateTime<chrono::Utc>, f64, f64, f64, f64, f64)>> {
+        self.query_manager().get_ohlcv_data(instrument_id, bucket_size, start_time, end_time).await
     }
 }

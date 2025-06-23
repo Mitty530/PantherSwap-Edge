@@ -209,15 +209,22 @@ impl ProductionDeploymentOrchestrator {
 
         // Initialize production monitor
         let monitor_config = ProductionMonitoringConfig::default();
-        let production_monitor = Arc::new(RwLock::new(
-            ProductionMonitor::new(monitor_config, database.clone()).await?
-        ));
 
-        // Initialize trading engine
+        // Create required components for ProductionMonitor
+        let ai_monitor = Arc::new(crate::ai::monitoring::create_ai_performance_monitor(database.clone()));
+        let db_monitor = Arc::new(crate::database::health_monitor::DatabaseHealthMonitor::with_defaults(database.pool.clone()));
+
+        // Initialize trading engine first
         let trading_config = crate::trading::engine::TradingEngineConfig::default();
         let trading_engine = Arc::new(RwLock::new(
             TradingEngine::new(trading_config, database.clone()).await?
         ));
+
+        let production_monitor = Arc::new(RwLock::new(
+            ProductionMonitor::new(monitor_config, ai_monitor, db_monitor, trading_engine.clone())
+        ));
+
+
 
         // Initialize deployment state
         let deployment_state = Arc::new(RwLock::new(DeploymentState {

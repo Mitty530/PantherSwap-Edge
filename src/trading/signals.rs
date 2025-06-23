@@ -45,6 +45,30 @@ pub struct TradingSignal {
     pub supporting_evidence: SignalEvidence,
 }
 
+impl TradingSignal {
+    /// Convert to database TradingSignal format
+    pub fn to_database_signal(&self) -> crate::database::types::TradingSignal {
+        use rust_decimal::Decimal;
+
+        crate::database::types::TradingSignal {
+            id: self.id,
+            timestamp: self.timestamp,
+            instrument_id: self.instrument_id,
+            strategy_name: self.strategy_type.to_string(),
+            signal_type: self.signal_type.clone(),
+            signal_strength: Decimal::from_f64_retain(self.signal_strength).unwrap_or_default(),
+            confidence_score: Decimal::from_f64_retain(self.confidence_score).unwrap_or_default(),
+            recommended_size: Decimal::from_f64_retain(1.0).unwrap_or_default(), // Default size
+            entry_price: self.entry_price.and_then(|p| Decimal::from_f64_retain(p)),
+            stop_loss: self.stop_loss.and_then(|p| Decimal::from_f64_retain(p)),
+            take_profit: self.take_profit.and_then(|p| Decimal::from_f64_retain(p)),
+            time_horizon: self.time_horizon.and_then(|d| chrono::Duration::from_std(d).ok()),
+            expected_return: self.expected_return.and_then(|r| Decimal::from_f64_retain(r)),
+            risk_metrics: Some(serde_json::to_value(&self.supporting_evidence).unwrap_or_default()),
+        }
+    }
+}
+
 // Signal Evidence Structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SignalEvidence {
@@ -367,14 +391,14 @@ pub struct AISignal {
     pub confidence_score: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RLRecommendation {
     pub action: String,
     pub confidence: f64,
     pub expected_reward: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PredictionResult {
     pub horizon: Duration,
     pub predicted_price: f64,
@@ -756,6 +780,10 @@ impl SignalGenerator {
                 RegimeType::Trending => 0.7,
                 RegimeType::Volatile => 0.5,
                 RegimeType::Crisis => 0.1,
+                RegimeType::Bullish => 0.8,
+                RegimeType::Bearish => 0.6,
+                RegimeType::Sideways => 1.0,
+                RegimeType::HighVolatility => 0.3,
             })
             .unwrap_or(0.5);
 
@@ -850,6 +878,10 @@ impl SignalGenerator {
                 RegimeType::Volatile => 0.7,
                 RegimeType::Normal => 0.3,
                 RegimeType::Crisis => 0.1,
+                RegimeType::Bullish => 0.9,
+                RegimeType::Bearish => 0.9,
+                RegimeType::Sideways => 0.2,
+                RegimeType::HighVolatility => 0.8,
             })
             .unwrap_or(0.5);
 
@@ -920,11 +952,11 @@ impl SignalGenerator {
                 // Crisis regime: typically sell risk assets, buy safe havens
                 (SignalType::Sell, -0.02, Duration::from_secs(3600)) // 1 hour
             },
-            RegimeType::Volatile => {
+            RegimeType::Volatile | RegimeType::HighVolatility => {
                 // Volatile regime: reduce positions, increase cash
                 (SignalType::Sell, -0.01, Duration::from_secs(1800)) // 30 minutes
             },
-            RegimeType::Trending => {
+            RegimeType::Trending | RegimeType::Bullish | RegimeType::Bearish => {
                 // Trending regime: follow the trend
                 let price_prediction = ai_signal.price_predictions
                     .iter()
@@ -932,11 +964,15 @@ impl SignalGenerator {
                     .map(|p| (p.predicted_price - microstructure.current_price) / microstructure.current_price)
                     .unwrap_or(0.0);
 
-                let signal = if price_prediction > 0.0 { SignalType::Buy } else { SignalType::Sell };
+                let signal = if price_prediction > 0.0 || matches!(regime_signal.current_regime, RegimeType::Bullish) {
+                    SignalType::Buy
+                } else {
+                    SignalType::Sell
+                };
                 (signal, price_prediction, Duration::from_secs(7200)) // 2 hours
             },
-            RegimeType::Normal => {
-                // Normal regime: mean reversion strategies
+            RegimeType::Normal | RegimeType::Sideways => {
+                // Normal/Sideways regime: mean reversion strategies
                 (SignalType::Hold, 0.0, Duration::from_secs(3600))
             },
         };

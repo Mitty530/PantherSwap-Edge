@@ -1,0 +1,446 @@
+[{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [13]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "13",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 8,
+	"message": "mismatched types\nexpected enum `std::result::Result<std::option::Option<RegimeSignal>, PantherSwapError>`\n   found enum `std::option::Option<MultiScaleRegimeSignal>`",
+	"source": "rustc",
+	"startLineNumber": 309,
+	"startColumn": 13,
+	"endLineNumber": 309,
+	"endColumn": 45,
+	"relatedInformation": [
+		{
+			"startLineNumber": 301,
+			"startColumn": 73,
+			"endLineNumber": 301,
+			"endColumn": 101,
+			"message": "expected `std::result::Result<std::option::Option<RegimeSignal>, PantherSwapError>` because of return type",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [15]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "15",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 8,
+	"message": "mismatched types\nexpected enum `std::result::Result<std::option::Option<_>, PantherSwapError>`\n   found enum `std::option::Option<_>`",
+	"source": "rustc",
+	"startLineNumber": 324,
+	"startColumn": 9,
+	"endLineNumber": 324,
+	"endColumn": 41,
+	"relatedInformation": [
+		{
+			"startLineNumber": 321,
+			"startColumn": 73,
+			"endLineNumber": 321,
+			"endColumn": 101,
+			"message": "expected `std::result::Result<std::option::Option<RegimeSignal>, PantherSwapError>` because of return type",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		},
+		{
+			"startLineNumber": 324,
+			"startColumn": 9,
+			"endLineNumber": 324,
+			"endColumn": 9,
+			"message": "try wrapping the expression in `Ok`: `Ok(`, `)`",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [18]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "18",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 8,
+	"message": "struct `MarketObservation` has no field named `skewness`\navailable fields are: `price_skewness`, `price_kurtosis`, `regime_persistence`, `volatility_clustering_score`, `regime_transition_signal`",
+	"source": "rustc",
+	"startLineNumber": 380,
+	"startColumn": 13,
+	"endLineNumber": 380,
+	"endColumn": 21
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [20]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "20",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 8,
+	"message": "struct `hmm_regime::MarketObservation` has no field named `skewness`\navailable fields are: `price_skewness`, `price_kurtosis`, `regime_persistence`, `volatility_clustering_score`, `regime_transition_signal`",
+	"source": "rustc",
+	"startLineNumber": 380,
+	"startColumn": 13,
+	"endLineNumber": 380,
+	"endColumn": 21
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [19]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "19",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 8,
+	"message": "struct `MarketObservation` has no field named `kurtosis`\navailable fields are: `price_skewness`, `price_kurtosis`, `regime_persistence`, `volatility_clustering_score`, `regime_transition_signal`",
+	"source": "rustc",
+	"startLineNumber": 381,
+	"startColumn": 13,
+	"endLineNumber": 381,
+	"endColumn": 21
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [21]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "21",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 8,
+	"message": "struct `hmm_regime::MarketObservation` has no field named `kurtosis`\navailable fields are: `price_skewness`, `price_kurtosis`, `regime_persistence`, `volatility_clustering_score`, `regime_transition_signal`",
+	"source": "rustc",
+	"startLineNumber": 381,
+	"startColumn": 13,
+	"endLineNumber": 381,
+	"endColumn": 21
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [0]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "0",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused import: `AISignal`",
+	"source": "rustc",
+	"startLineNumber": 9,
+	"startColumn": 31,
+	"endLineNumber": 9,
+	"endColumn": 39,
+	"relatedInformation": [
+		{
+			"startLineNumber": 9,
+			"startColumn": 31,
+			"endLineNumber": 9,
+			"endColumn": 41,
+			"message": "remove the unused import",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [2]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "2",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused import: `crate::trading::engine::TradingEngine`",
+	"source": "rustc",
+	"startLineNumber": 10,
+	"startColumn": 5,
+	"endLineNumber": 10,
+	"endColumn": 42,
+	"relatedInformation": [
+		{
+			"startLineNumber": 10,
+			"startColumn": 1,
+			"endLineNumber": 11,
+			"endColumn": 1,
+			"message": "remove the whole `use` item",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [4]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "4",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused import: `RegimeType`",
+	"source": "rustc",
+	"startLineNumber": 11,
+	"startColumn": 42,
+	"endLineNumber": 11,
+	"endColumn": 52,
+	"relatedInformation": [
+		{
+			"startLineNumber": 11,
+			"startColumn": 40,
+			"endLineNumber": 11,
+			"endColumn": 52,
+			"message": "remove the unused import",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [6]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "6",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused import: `Duration`",
+	"source": "rustc",
+	"startLineNumber": 14,
+	"startColumn": 29,
+	"endLineNumber": 14,
+	"endColumn": 37,
+	"relatedInformation": [
+		{
+			"startLineNumber": 14,
+			"startColumn": 27,
+			"endLineNumber": 14,
+			"endColumn": 37,
+			"message": "remove the unused import",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [8]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "8",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused import: `std::collections::HashMap`",
+	"source": "rustc",
+	"startLineNumber": 16,
+	"startColumn": 5,
+	"endLineNumber": 16,
+	"endColumn": 30,
+	"relatedInformation": [
+		{
+			"startLineNumber": 16,
+			"startColumn": 1,
+			"endLineNumber": 17,
+			"endColumn": 1,
+			"message": "remove the whole `use` item",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [10]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "10",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused imports: `debug` and `warn`",
+	"source": "rustc",
+	"startLineNumber": 20,
+	"startColumn": 21,
+	"endLineNumber": 20,
+	"endColumn": 25,
+	"relatedInformation": [
+		{
+			"startLineNumber": 20,
+			"startColumn": 19,
+			"endLineNumber": 20,
+			"endColumn": 25,
+			"message": "remove the unused imports",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [12]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "12",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused imports: `debug` and `warn`",
+	"source": "rustc",
+	"startLineNumber": 20,
+	"startColumn": 34,
+	"endLineNumber": 20,
+	"endColumn": 39,
+	"relatedInformation": [
+		{
+			"startLineNumber": 20,
+			"startColumn": 19,
+			"endLineNumber": 20,
+			"endColumn": 25,
+			"message": "remove the unused imports",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [22]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "22",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused variable: `instrument_id`",
+	"source": "rustc",
+	"startLineNumber": 396,
+	"startColumn": 46,
+	"endLineNumber": 396,
+	"endColumn": 59,
+	"relatedInformation": [
+		{
+			"startLineNumber": 396,
+			"startColumn": 46,
+			"endLineNumber": 396,
+			"endColumn": 59,
+			"message": "if this is intentional, prefix it with an underscore: `_instrument_id`",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+},{
+	"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs",
+	"owner": "rustc",
+	"code": {
+		"value": "Click for full compiler diagnostic",
+		"target": {
+			"$mid": 1,
+			"path": "/diagnostic message [24]",
+			"scheme": "rust-analyzer-diagnostics-view",
+			"query": "24",
+			"fragment": "file:///Users/mamadouourydiallo/PantherSwap%20Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	},
+	"severity": 4,
+	"message": "unused variable: `instrument_id`",
+	"source": "rustc",
+	"startLineNumber": 639,
+	"startColumn": 52,
+	"endLineNumber": 639,
+	"endColumn": 65,
+	"relatedInformation": [
+		{
+			"startLineNumber": 639,
+			"startColumn": 52,
+			"endLineNumber": 639,
+			"endColumn": 65,
+			"message": "if this is intentional, prefix it with an underscore: `_instrument_id`",
+			"resource": "/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/src/ai/hmm_integration.rs"
+		}
+	],
+	"tags": [
+		1
+	]
+}]

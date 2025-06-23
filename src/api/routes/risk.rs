@@ -210,7 +210,7 @@ pub struct RiskRecommendation {
 /// Get comprehensive risk metrics
 pub async fn get_risk_metrics(
     Query(params): Query<RiskMetricsQuery>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<RiskMetricsResponse>>, StatusCode> {
     // Check permissions
@@ -258,7 +258,7 @@ pub async fn get_risk_metrics(
 
 /// Get current risk limits and their status
 pub async fn get_risk_limits(
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<RiskLimitsResponse>>, StatusCode> {
     // Check permissions
@@ -306,7 +306,7 @@ pub async fn get_risk_limits(
 
 /// Get risk alerts
 pub async fn get_risk_alerts(
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<RiskAlertsResponse>>, StatusCode> {
     // Check permissions
@@ -350,7 +350,7 @@ pub async fn get_risk_alerts(
 
 /// Get risk monitoring dashboard
 pub async fn get_risk_monitoring(
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<RiskMonitoringResponse>>, StatusCode> {
     // Check permissions

@@ -1,0 +1,10 @@
+/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/scripts/target/debug/deps/libidna-0de940ea99d0b3ff.rmeta: /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/lib.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/deprecated.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/punycode.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/uts46.rs
+
+/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/scripts/target/debug/deps/libidna-0de940ea99d0b3ff.rlib: /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/lib.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/deprecated.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/punycode.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/uts46.rs
+
+/Users/mamadouourydiallo/PantherSwap Edge/pantherswap-edge/scripts/target/debug/deps/idna-0de940ea99d0b3ff.d: /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/lib.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/deprecated.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/punycode.rs /Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/uts46.rs
+
+/Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/lib.rs:
+/Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/deprecated.rs:
+/Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/punycode.rs:
+/Users/mamadouourydiallo/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/idna-1.0.3/src/uts46.rs:

@@ -123,7 +123,7 @@ pub struct StrategySignalCount {
 /// Get trading signals with filtering and pagination
 pub async fn get_signals(
     Query(params): Query<SignalsQuery>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<SignalsResponse>>, StatusCode> {
     // Check permissions
@@ -164,7 +164,7 @@ pub async fn get_signals(
 
 /// Get latest trading signals
 pub async fn get_latest_signals(
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<LatestSignalsResponse>>, StatusCode> {
     // Check permissions
@@ -189,7 +189,7 @@ pub async fn get_latest_signals(
 /// Get signal performance metrics
 pub async fn get_signal_performance(
     Query(params): Query<SignalPerformanceQuery>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<Vec<SignalPerformanceResponse>>>, StatusCode> {
     // Check permissions
@@ -246,7 +246,7 @@ pub async fn get_signal_performance(
 
 /// Get signal analytics
 pub async fn get_signal_analytics(
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<SignalAnalyticsResponse>>, StatusCode> {
     // Check permissions
@@ -286,7 +286,7 @@ pub async fn get_signal_analytics(
 
 // Helper functions for mock data generation
 
-fn generate_mock_signals(params: &SignalsQuery) -> Vec<SignalResponse> {
+fn generate_mock_signals(_params: &SignalsQuery) -> Vec<SignalResponse> {
     // Generate mock signals based on query parameters
     vec![
         SignalResponse {

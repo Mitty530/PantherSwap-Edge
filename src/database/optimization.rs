@@ -3,9 +3,9 @@
 
 use crate::utils::Result;
 use sqlx::{PgPool, Row};
-use tracing::{info, warn};
+use tracing::info;
 use chrono::{DateTime, Utc};
-use serde_json::{json, Value};
+// use serde_json::{json, Value}; // Unused for now
 use std::collections::HashMap;
 
 /// Database optimization manager for high-frequency trading performance

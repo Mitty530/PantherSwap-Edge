@@ -2,8 +2,8 @@
 // Validates 40-60% overall throughput improvement and performance targets
 
 use crate::utils::Result;
-use sqlx::PgPool;
-use tracing::{info, warn};
+use sqlx::{PgPool, Row};
+use tracing::info;
 use serde_json::{json, Value};
 use std::time::{Duration, Instant};
 use tokio::time::timeout;
@@ -240,7 +240,7 @@ impl OptimizationValidator {
 
         latencies.sort();
         let avg_latency = Duration::from_nanos(
-            latencies.iter().map(|d| d.as_nanos()).sum::<u128>() / latencies.len() as u128
+            (latencies.iter().map(|d| d.as_nanos()).sum::<u128>() / latencies.len() as u128) as u64
         );
         
         let p95_index = (latencies.len() as f64 * 0.95) as usize;
@@ -499,7 +499,7 @@ impl OptimizationValidator {
         let cache_improvement = cache_performance.cache_efficiency_improvement;
 
         // Weighted average of improvements
-        (throughput_improvement * 0.4 + query_improvement * 0.3 + cache_improvement * 0.3)
+        throughput_improvement * 0.4 + query_improvement * 0.3 + cache_improvement * 0.3
     }
 
     /// Generate optimization recommendations

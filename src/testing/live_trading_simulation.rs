@@ -159,10 +159,10 @@ impl LiveTradingSimulator {
         info!("Validating optimized database configuration...");
         match self.database.comprehensive_health_check().await {
             Ok(health_report) => {
-                if health_report.overall_health_score >= 0.8 {
-                    info!("✅ Database health check passed (score: {:.1}%)", health_report.overall_health_score * 100.0);
+                if health_report.overall_score >= 0.8 {
+                    info!("✅ Database health check passed (score: {:.1}%)", health_report.overall_score * 100.0);
                 } else {
-                    warn!("⚠️  Database health score below optimal: {:.1}%", health_report.overall_health_score * 100.0);
+                    warn!("⚠️  Database health score below optimal: {:.1}%", health_report.overall_score * 100.0);
                     validation_passed = false;
                 }
             }

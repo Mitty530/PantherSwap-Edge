@@ -113,32 +113,34 @@ enable_adaptive_batching = true
 warmup_iterations = 200
 
 [market_data]
-providers = ["alpaca", "alpha_vantage"]
-primary_provider = "alpaca"
-alpha_vantage_api_key = "EZDZ4VOFQ2GRA7VU"
+providers = ["ig_trading"]
+primary_provider = "ig_trading"
 update_interval_ms = 100
 max_symbols = 1000
 enable_real_time = true
 enable_historical_backfill = true
 data_quality_threshold = 0.95
 max_latency_ms = 500
-enable_failover = true
-backup_providers = ["alpha_vantage", "polygon", "iex"]
+enable_failover = false  # Single provider configuration
 
-[market_data.alpaca]
-api_key = "CK6KLMXTNEGGKCMVZA2R"
-secret_key = "vFxGY6FDzr3Kq1XhkSHzrZRFgvDKuEfQj9b6odCR"
-base_url = "https://paper-api.alpaca.markets"
-data_url = "https://data.alpaca.markets"
-paper_trading = true
+[market_data.ig_trading]
+api_key = ""  # Set via IG_TRADING_API_KEY environment variable
+username = ""  # Set via IG_TRADING_USERNAME environment variable
+password = ""  # Set via IG_TRADING_PASSWORD environment variable
+security_token = ""  # Set via IG_TRADING_SECURITY_TOKEN environment variable
+cst = ""  # Set via IG_TRADING_CST environment variable
+version = "2"
+base_url = "https://api.ig.com/gateway/deal"  # Production environment
+content_type = "application/json; charset=UTF-8"
+accept = "application/json; charset=UTF-8"
 enable_streaming = true
-max_positions = 100
-max_order_value = 100000.0
-enable_fractional_shares = true
-rate_limit_per_minute = 200
+max_positions = 200
+max_order_value = 500000.0
+rate_limit_per_minute = 100
 connection_timeout_ms = 5000
 retry_attempts = 3
 enable_order_execution = true
+demo_mode = false  # Production mode
 
 [monitoring]
 # Production Monitoring Configuration

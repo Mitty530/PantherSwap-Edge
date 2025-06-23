@@ -330,7 +330,7 @@ impl ExecutionOptimizer {
         // Get current market data
         let market_data = self.market_data_cache.read().await;
         let latest_tick = market_data.back().ok_or_else(|| {
-            PantherSwapError::execution("No market data available for analysis".to_string())
+            PantherSwapError::trading("No market data available for analysis".to_string())
         })?;
 
         // Calculate market impact
@@ -370,7 +370,7 @@ impl ExecutionOptimizer {
         let confidence = self.calculate_analysis_confidence(&recommended_algorithm).await?;
 
         Ok(PreTradeAnalysis {
-            recommended_algorithm,
+            recommended_algorithm: recommended_algorithm.clone(),
             estimated_slippage_bps: algorithm_slippages.get(&recommended_algorithm).unwrap_or(&5.0).clone(),
             estimated_market_impact_bps: estimated_market_impact,
             recommended_venues,
@@ -392,7 +392,11 @@ impl ExecutionOptimizer {
         let analysis = self.analyze_execution_strategy(
             order_size,
             &signal.instrument_id.to_string(),
-            if signal.direction > 0 { OrderSide::Buy } else { OrderSide::Sell },
+            match signal.signal_type {
+                crate::database::types::SignalType::Buy => OrderSide::Buy,
+                crate::database::types::SignalType::Sell => OrderSide::Sell,
+                _ => OrderSide::Buy, // Default to Buy for Hold/AI signals
+            },
             urgency,
         ).await?;
 
@@ -652,7 +656,7 @@ impl ExecutionOptimizer {
 
             slices.push(ExecutionSlice {
                 slice_id: Uuid::new_v4(),
-                parent_order_id: signal.signal_id,
+                parent_order_id: signal.id,
                 quantity: adjusted_size,
                 target_price: None, // Market price
                 execution_time,
@@ -705,7 +709,7 @@ impl ExecutionOptimizer {
             if slice_size > 0.0 {
                 slices.push(ExecutionSlice {
                     slice_id: Uuid::new_v4(),
-                    parent_order_id: signal.signal_id,
+                    parent_order_id: signal.id,
                     quantity: slice_size,
                     target_price: None,
                     execution_time: slice_time,
@@ -728,7 +732,7 @@ impl ExecutionOptimizer {
             } else {
                 slices.push(ExecutionSlice {
                     slice_id: Uuid::new_v4(),
-                    parent_order_id: signal.signal_id,
+                    parent_order_id: signal.id,
                     quantity: remaining_size,
                     target_price: None,
                     execution_time: Utc::now(),
@@ -760,7 +764,7 @@ impl ExecutionOptimizer {
         if immediate_portion > 0.0 {
             slices.push(ExecutionSlice {
                 slice_id: Uuid::new_v4(),
-                parent_order_id: signal.signal_id,
+                parent_order_id: signal.id,
                 quantity: order_size * immediate_portion,
                 target_price: None,
                 execution_time: Utc::now(),
@@ -780,7 +784,7 @@ impl ExecutionOptimizer {
             for i in 0..remaining_slices {
                 slices.push(ExecutionSlice {
                     slice_id: Uuid::new_v4(),
-                    parent_order_id: signal.signal_id,
+                    parent_order_id: signal.id,
                     quantity: slice_size,
                     target_price: None,
                     execution_time: Utc::now() + time_interval * (i + 1) as i32,
@@ -810,7 +814,7 @@ impl ExecutionOptimizer {
         for i in 0..estimated_slices {
             slices.push(ExecutionSlice {
                 slice_id: Uuid::new_v4(),
-                parent_order_id: signal.signal_id,
+                parent_order_id: signal.id,
                 quantity: slice_size,
                 target_price: None,
                 execution_time: Utc::now() + Duration::minutes(i * 2), // Every 2 minutes
@@ -844,7 +848,7 @@ impl ExecutionOptimizer {
 
             slices.push(ExecutionSlice {
                 slice_id: Uuid::new_v4(),
-                parent_order_id: signal.signal_id,
+                parent_order_id: signal.id,
                 quantity: slice_size,
                 target_price: None,
                 execution_time: Utc::now() + Duration::seconds(i as i64 * 30), // 30 seconds apart
@@ -878,7 +882,7 @@ impl ExecutionOptimizer {
         for (i, venue) in recommended_venues.iter().enumerate() {
             slices.push(ExecutionSlice {
                 slice_id: Uuid::new_v4(),
-                parent_order_id: signal.signal_id,
+                parent_order_id: signal.id,
                 quantity: slice_size,
                 target_price: None,
                 execution_time: Utc::now() + Duration::milliseconds(i as i64 * 100), // Stagger by 100ms
@@ -901,7 +905,7 @@ impl ExecutionOptimizer {
         // Single immediate execution
         Ok(vec![ExecutionSlice {
             slice_id: Uuid::new_v4(),
-            parent_order_id: signal.signal_id,
+            parent_order_id: signal.id,
             quantity: order_size,
             target_price: None,
             execution_time: Utc::now(),

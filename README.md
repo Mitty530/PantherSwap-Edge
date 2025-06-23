@@ -14,7 +14,7 @@ PantherSwap Edge is a production-ready algorithmic trading platform built in Rus
 - **⚡ Ultra-Low Latency**: <10ms order execution, <100ms AI inference
 - **🏗️ High Throughput**: >1000 trades per second capability
 - **📊 Real-Time Analytics**: TimescaleDB integration for market microstructure analysis
-- **🔗 Multi-Provider Support**: IG Trading, Alpaca, Alpha Vantage APIs
+- **🔗 IG Trading Integration**: Professional-grade market data and execution
 - **🛡️ Production Ready**: Comprehensive monitoring, auto-recovery, and risk management
 
 ## 🏆 **Performance Achievements**
@@ -31,9 +31,9 @@ PantherSwap Edge is a production-ready algorithmic trading platform built in Rus
 
 ### Prerequisites
 
-- Rust 1.70+ 
+- Rust 1.70+
 - PostgreSQL/TimescaleDB
-- API Keys (IG Trading, Alpaca, or Alpha Vantage)
+- IG Trading API credentials
 
 ### Installation
 
@@ -67,33 +67,28 @@ max_connections = 100
 query_timeout = 5
 ```
 
-### API Providers
+### IG Trading API Configuration
 
-#### IG Trading (Primary)
 ```toml
 [market_data.ig_trading]
 api_key = "your_ig_api_key"
 security_token = "your_security_token"
 cst = "your_cst_token"
-base_url = "https://demo-api.ig.com/gateway/deal"
+version = "2"
+base_url = "https://demo-api.ig.com/gateway/deal"  # Demo environment
+# base_url = "https://api.ig.com/gateway/deal"     # Production environment
 demo_mode = true
-```
-
-#### Alpaca (Backup)
-```toml
-[market_data.alpaca]
-api_key = "your_alpaca_key"
-secret_key = "your_alpaca_secret"
-base_url = "https://paper-api.alpaca.markets"
-paper_trading = true
+rate_limit_per_minute = 100
+connection_timeout_ms = 5000
+retry_attempts = 3
 ```
 
 ## 🏗️ **Architecture**
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Market Data   │    │   AI Engine     │    │ Trading Engine  │
-│   Providers     │───▶│   (LSTM/HMM)    │───▶│   (Execution)   │
+│   IG Trading    │    │   AI Engine     │    │ Trading Engine  │
+│   API           │───▶│   (LSTM/HMM)    │───▶│   (Execution)   │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
          ▼                       ▼                       ▼
@@ -154,14 +149,14 @@ paper_trading = true
 # Run unit tests
 cargo test
 
-# Integration tests
-cargo test --test integration_tests
+# Run database migrations
+cargo run --bin run_migrations
 
-# Performance benchmarks
-cargo run --bin performance_benchmark
+# Setup database tables
+cargo run --bin setup_database_tables
 
-# Live trading simulation
-cargo run --bin comprehensive_trading_simulation
+# Start the trading platform
+cargo run --release
 ```
 
 ## 📚 **API Documentation**
@@ -210,8 +205,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 **Acknowledgments**
 
 - TimescaleDB for high-performance time-series storage
-- IG Trading for professional market data APIs
-- Alpaca for algorithmic trading infrastructure
+- IG Trading for professional market data and execution APIs
 - Rust community for excellent financial libraries
 
 ## 📞 **Support**

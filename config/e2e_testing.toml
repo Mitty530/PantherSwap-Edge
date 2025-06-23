@@ -21,7 +21,7 @@ enable_performance_metrics = true
 connection_pool_monitoring = true
 
 [market_data]
-providers = ["alpha_vantage"]
+providers = ["ig_trading"]
 instruments = [
     # Forex pairs for high-frequency testing
     "EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "USDCAD", "NZDUSD", "USDCHF", "EURJPY",
@@ -32,8 +32,25 @@ update_interval_ms = 5000  # 5 seconds for more frequent updates during testing
 max_retries = 5
 timeout_ms = 8000
 quality_threshold = 0.8  # Higher quality threshold for testing
-alpha_vantage_api_key = "EZDZ4VOFQ2GRA7VU"
-iex_cloud_api_key = ""
+
+[market_data.ig_trading]
+api_key = ""  # Set via IG_TRADING_API_KEY environment variable
+username = ""  # Set via IG_TRADING_USERNAME environment variable
+password = ""  # Set via IG_TRADING_PASSWORD environment variable
+security_token = ""  # Set via IG_TRADING_SECURITY_TOKEN environment variable
+cst = ""  # Set via IG_TRADING_CST environment variable
+version = "2"
+base_url = "https://demo-api.ig.com/gateway/deal"  # Demo environment for testing
+content_type = "application/json; charset=UTF-8"
+accept = "application/json; charset=UTF-8"
+enable_streaming = true
+max_positions = 200
+max_order_value = 500000.0
+rate_limit_per_minute = 100
+connection_timeout_ms = 5000
+retry_attempts = 3
+enable_order_execution = true
+demo_mode = true  # Use demo environment for testing
 
 [trading]
 enable_live_trading = true  # Enable for end-to-end testing

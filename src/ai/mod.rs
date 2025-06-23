@@ -13,8 +13,9 @@ mod hmm_regime_test;
 
 use crate::database::{Database, types::MarketTick};
 use crate::utils::Result;
-use crate::trading::signals::{AISignal, PredictionResult, RegimeSignal};
+use crate::trading::signals::{AISignal, PredictionResult, RegimeSignal, RLRecommendation};
 use crate::database::types::RegimeType;
+use crate::config::settings::AIConfig;
 use self::time_series::{LSTMTimeSeriesModel, create_forex_lstm_model};
 use self::rl_agent::RLTradingAgent;
 use self::hmm_regime::{HMMRegimeDetector, create_hmm_regime_detector};
@@ -24,6 +25,7 @@ use chrono::{DateTime, Utc};
 use std::time::Duration;
 use tracing::{info, warn};
 use serde::{Serialize, Deserialize};
+use rand;
 
 /// Cached prediction for performance optimization
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -89,7 +91,23 @@ pub struct AIPerformanceMetrics {
 }
 
 impl AIEngine {
-    pub async fn new(database: Database) -> Result<Self> {
+    pub async fn new(database: Database, _config: AIConfig) -> Result<Self> {
+        info!("Initializing AI Engine with production ML models and database persistence");
+
+        Ok(Self {
+            database,
+            time_series_models: HashMap::new(),
+            regime_detectors: HashMap::new(),
+            rl_agents: HashMap::new(),
+            performance_metrics: AIPerformanceMetrics::default(),
+            prediction_cache: HashMap::new(),
+            enable_database_persistence: true,
+            inference_optimizer: InferenceOptimizer::default(),
+        })
+    }
+
+    /// Create AI engine with just database (for backward compatibility)
+    pub async fn new_simple(database: Database) -> Result<Self> {
         info!("Initializing AI Engine with production ML models and database persistence");
 
         Ok(Self {
@@ -487,6 +505,96 @@ impl AIEngine {
     pub fn is_ready(&self) -> bool {
         !self.time_series_models.is_empty() &&
         self.performance_metrics.average_latency_ms < 100.0
+    }
+
+    /// Check if LSTM models are available
+    pub async fn has_lstm_models(&self) -> bool {
+        !self.time_series_models.is_empty()
+    }
+
+    /// Check if HMM regime detectors are available
+    pub async fn has_hmm_detectors(&self) -> bool {
+        !self.regime_detectors.is_empty()
+    }
+
+    /// Check if RL agents are available
+    pub async fn has_rl_agents(&self) -> bool {
+        !self.rl_agents.is_empty()
+    }
+
+    /// Start real-time inference mode
+    pub async fn start_real_time_inference(&self) -> Result<()> {
+        info!("Starting AI engine real-time inference mode");
+        // Initialize models if not already done
+        // This would typically start background processing threads
+        Ok(())
+    }
+
+    /// Stop real-time inference mode
+    pub async fn stop_real_time_inference(&self) -> Result<()> {
+        info!("Stopping AI engine real-time inference mode");
+        // Clean up background processing
+        Ok(())
+    }
+
+    /// Predict price using LSTM model for a specific symbol
+    pub async fn predict_price_lstm(&self, symbol: &str, ticks: &[MarketTick]) -> Result<PredictionResult> {
+        if ticks.is_empty() {
+            return Err(crate::utils::PantherSwapError::ai_prediction("No market data provided".to_string()));
+        }
+
+        // For simulation purposes, generate a mock prediction
+        // In production, this would use the actual LSTM model
+        let latest_tick = &ticks[ticks.len() - 1];
+        let price_change = (rand::random::<f64>() - 0.5) * 0.02; // ±1% change
+        let predicted_price = latest_tick.price * (1.0 + price_change);
+        let confidence = 0.7 + (rand::random::<f64>() * 0.2); // 70-90% confidence
+
+        Ok(PredictionResult {
+            horizon: Duration::from_secs(60), // 1 minute prediction
+            predicted_price,
+            confidence_score: confidence,
+            prediction_interval: (predicted_price * 0.99, predicted_price * 1.01),
+        })
+    }
+
+    /// Detect market regime using HMM for a specific symbol
+    pub async fn detect_regime_hmm(&self, symbol: &str, ticks: &[MarketTick]) -> Result<RegimeSignal> {
+        if ticks.is_empty() {
+            return Err(crate::utils::PantherSwapError::ai_prediction("No market data provided".to_string()));
+        }
+
+        // For simulation purposes, generate a mock regime detection
+        // In production, this would use the actual HMM model
+        let regimes = [RegimeType::Normal, RegimeType::Trending, RegimeType::Volatile];
+        let regime = regimes[rand::random::<usize>() % regimes.len()];
+        let confidence = 0.6 + (rand::random::<f64>() * 0.3); // 60-90% confidence
+
+        Ok(RegimeSignal {
+            regime_type: regime,
+            confidence,
+            transition_probability: rand::random::<f64>() * 0.3, // 0-30% transition probability
+            timestamp: Utc::now(),
+        })
+    }
+
+    /// Get RL trading recommendation for a specific symbol
+    pub async fn get_rl_recommendation(&self, symbol: &str, ticks: &[MarketTick]) -> Result<RLRecommendation> {
+        if ticks.is_empty() {
+            return Err(crate::utils::PantherSwapError::ai_prediction("No market data provided".to_string()));
+        }
+
+        // For simulation purposes, generate a mock RL recommendation
+        // In production, this would use the actual RL agent
+        let actions = ["HOLD", "BUY_SMALL", "BUY_LARGE", "SELL_SMALL", "SELL_LARGE"];
+        let action = actions[rand::random::<usize>() % actions.len()];
+        let confidence = 0.65 + (rand::random::<f64>() * 0.25); // 65-90% confidence
+
+        Ok(RLRecommendation {
+            action: action.to_string(),
+            confidence,
+            expected_reward: (rand::random::<f64>() - 0.5) * 100.0, // ±50 reward
+        })
     }
 }
 

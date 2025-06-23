@@ -35,8 +35,7 @@ dotenvy = "0.15"
 # HTTP client
 reqwest = { version = "0.11", features = ["json"] }
 
-# Alpaca API integration (HTTP-based)
-# alpaca_api_client = "0.1"  # Temporarily disabled due to compatibility issues
+# WebSocket support for IG Trading streaming
 tungstenite = "0.21"
 tokio-tungstenite = { version = "0.21", features = ["native-tls"] }
 url = "2.4"
@@ -65,11 +64,8 @@ rust_decimal = { version = "1.37", features = ["serde"] }
 async-trait = "0.1.88"
 bincode = "1.3"
 
-# Performance monitoring and profiling
-criterion = { version = "0.5", features = ["html_reports"] }
-pprof = { version = "0.13", features = ["criterion", "protobuf-codec"] }
+# System monitoring for production
 sysinfo = "0.30"
-tokio-metrics = "0.3"
 
 [dev-dependencies]
 hyper = { version = "1.0", features = ["full"] }
@@ -82,88 +78,8 @@ name = "pantherswap-edge"
 path = "src/main.rs"
 
 [[bin]]
-name = "test-db-connection"
-path = "test_db_connection.rs"
-
-[[bin]]
-name = "comprehensive-trading-db-test"
-path = "comprehensive_trading_db_test.rs"
-
-[[bin]]
-name = "optimized-hft-performance-test"
-path = "optimized_hft_performance_test.rs"
-
-[[bin]]
 name = "migrate"
 path = "src/bin/migrate.rs"
-
-[[bin]]
-name = "test_crud"
-path = "src/bin/test_crud.rs"
-
-[[bin]]
-name = "test_alpha_vantage"
-path = "src/bin/test_alpha_vantage.rs"
-
-[[bin]]
-name = "test_pipeline"
-path = "src/bin/test_pipeline.rs"
-
-[[bin]]
-name = "test_api"
-path = "src/bin/test_api.rs"
-
-[[bin]]
-name = "performance_benchmark"
-path = "src/bin/performance_benchmark.rs"
-
-[[bin]]
-name = "order_latency_optimizer"
-path = "src/bin/order_latency_optimizer.rs"
-
-[[bin]]
-name = "ai_inference_optimizer"
-path = "src/bin/ai_inference_optimizer.rs"
-
-[[bin]]
-name = "throughput_optimizer"
-path = "src/bin/throughput_optimizer.rs"
-
-[[bin]]
-name = "simple_throughput_test"
-path = "src/bin/simple_throughput_test.rs"
-
-[[bin]]
-name = "optimized_throughput_engine"
-path = "src/bin/optimized_throughput_engine.rs"
-
-[[bin]]
-name = "ultra_fast_throughput"
-path = "src/bin/ultra_fast_throughput.rs"
-
-[[bin]]
-name = "final_throughput_test"
-path = "src/bin/final_throughput_test.rs"
-
-[[bin]]
-name = "real_time_data_test"
-path = "src/bin/real_time_data_test.rs"
-
-[[bin]]
-name = "comprehensive_trading_simulation"
-path = "src/bin/comprehensive_trading_simulation.rs"
-
-[[bin]]
-name = "real_database_trading_test"
-path = "src/bin/real_database_trading_test.rs"
-
-[[bin]]
-name = "simple_db_test"
-path = "src/bin/simple_db_test.rs"
-
-[[bin]]
-name = "test_trading_execution_logging"
-path = "src/bin/test_trading_execution_logging.rs"
 
 [[bin]]
 name = "run_migrations"
@@ -174,41 +90,17 @@ name = "setup_database_tables"
 path = "src/bin/setup_database_tables.rs"
 
 [[bin]]
-name = "live_trading_test"
-path = "src/bin/live_trading_test.rs"
+name = "run_simple_simulation"
+path = "src/bin/run_simple_simulation.rs"
 
 [[bin]]
-name = "quick_live_test"
-path = "src/bin/quick_live_test.rs"
+name = "real_timescale_simulation"
+path = "src/bin/real_timescale_simulation.rs"
 
 [[bin]]
-name = "working_trading_engine_demo"
-path = "src/bin/working_trading_engine_demo.rs"
+name = "rust_timescale_simulation"
+path = "src/bin/rust_timescale_simulation.rs"
 
 [[bin]]
-name = "real_live_trading_test"
-path = "src/bin/real_live_trading_test.rs"
-
-[[bin]]
-name = "test_alpaca_integration"
-path = "src/bin/test_alpaca_integration.rs"
-
-[[bin]]
-name = "alpaca_end_to_end_test"
-path = "src/bin/alpaca_end_to_end_test.rs"
-
-[[bin]]
-name = "alpaca_live_demo"
-path = "src/bin/alpaca_live_demo.rs"
-
-[[bin]]
-name = "test_alpaca_api"
-path = "src/bin/test_alpaca_api.rs"
-
-[[bin]]
-name = "mock_alpaca_test"
-path = "src/bin/mock_alpaca_test.rs"
-
-[[bin]]
-name = "test_ig_trading_connectivity"
-path = "test_ig_trading_connectivity.rs"
+name = "simple_rust_db_test"
+path = "src/bin/simple_rust_db_test.rs"

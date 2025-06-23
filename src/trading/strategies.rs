@@ -240,6 +240,10 @@ impl TradingStrategy for PredictiveMarketMaking {
                 RegimeType::Trending => 0.7,
                 RegimeType::Volatile => 0.5,
                 RegimeType::Crisis => 0.1,
+                RegimeType::Bullish => 0.8,
+                RegimeType::Bearish => 0.6,
+                RegimeType::Sideways => 0.9,
+                RegimeType::HighVolatility => 0.4,
             })
             .unwrap_or(0.5);
 
@@ -440,6 +444,10 @@ impl TradingStrategy for MicrostructureMomentum {
                 RegimeType::Volatile => 0.7,
                 RegimeType::Normal => 0.3,
                 RegimeType::Crisis => 0.1,
+                RegimeType::Bullish => 0.9,
+                RegimeType::Bearish => 0.8,
+                RegimeType::Sideways => 0.2,
+                RegimeType::HighVolatility => 0.6,
             })
             .unwrap_or(0.5);
 
@@ -579,6 +587,7 @@ impl TradingStrategy for RegimeArbitrage {
         let (signal_type, expected_return) = match regime_signal.current_regime {
             RegimeType::Crisis => (SignalType::Sell, -0.02),
             RegimeType::Volatile => (SignalType::Sell, -0.01),
+            RegimeType::HighVolatility => (SignalType::Sell, -0.015),
             RegimeType::Trending => {
                 let price_pred = match ai_signal.price_predictions.first() {
                     Some(p) => p,
@@ -587,7 +596,24 @@ impl TradingStrategy for RegimeArbitrage {
                 let return_est = (price_pred.predicted_price - microstructure.current_price) / microstructure.current_price;
                 (if return_est > 0.0 { SignalType::Buy } else { SignalType::Sell }, return_est)
             },
+            RegimeType::Bullish => {
+                let price_pred = match ai_signal.price_predictions.first() {
+                    Some(p) => p,
+                    None => return Ok(None),
+                };
+                let return_est = (price_pred.predicted_price - microstructure.current_price) / microstructure.current_price;
+                (SignalType::Buy, return_est.max(0.01))
+            },
+            RegimeType::Bearish => {
+                let price_pred = match ai_signal.price_predictions.first() {
+                    Some(p) => p,
+                    None => return Ok(None),
+                };
+                let return_est = (price_pred.predicted_price - microstructure.current_price) / microstructure.current_price;
+                (SignalType::Sell, return_est.min(-0.01))
+            },
             RegimeType::Normal => return Ok(None),
+            RegimeType::Sideways => return Ok(None),
         };
 
         Ok(Some(TradingSignal {

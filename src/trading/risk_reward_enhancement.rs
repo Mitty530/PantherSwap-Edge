@@ -678,6 +678,10 @@ impl RiskRewardEngine {
             Some(RegimeType::Trending) => 1.1,   // Slightly increase in trending
             Some(RegimeType::Volatile) => 0.8,   // Reduce in volatile markets
             Some(RegimeType::Crisis) => 0.5,     // Significantly reduce in crisis
+            Some(RegimeType::Bullish) => 1.2,    // Increase in bullish markets
+            Some(RegimeType::Bearish) => 0.7,    // Reduce in bearish markets
+            Some(RegimeType::Sideways) => 0.9,   // Slightly reduce in sideways markets
+            Some(RegimeType::HighVolatility) => 0.6, // Reduce in high volatility
             None => 0.9,                         // Conservative when regime unknown
         }
     }
@@ -938,6 +942,10 @@ impl RiskRewardEngine {
             Some(RegimeType::Trending) => 0.8,   // Tighter stops in trending
             Some(RegimeType::Volatile) => 1.5,   // Wider stops in volatile
             Some(RegimeType::Crisis) => 2.0,     // Much wider stops in crisis
+            Some(RegimeType::Bullish) => 0.9,    // Slightly tighter stops in bullish markets
+            Some(RegimeType::Bearish) => 1.3,    // Wider stops in bearish markets
+            Some(RegimeType::Sideways) => 1.1,   // Moderate stops in sideways markets
+            Some(RegimeType::HighVolatility) => 1.7, // Wider stops in high volatility
             None => 1.2,                         // Conservative when unknown
         }
     }
@@ -951,6 +959,10 @@ impl RiskRewardEngine {
             Some(RegimeType::Trending) => 0.7,   // Tighter stops in trending (let trends run)
             Some(RegimeType::Volatile) => 1.6,   // Wider stops in volatile (avoid whipsaws)
             Some(RegimeType::Crisis) => 2.2,     // Much wider stops in crisis (extreme volatility)
+            Some(RegimeType::Bullish) => 0.8,    // Tighter stops in bullish markets
+            Some(RegimeType::Bearish) => 1.4,    // Wider stops in bearish markets
+            Some(RegimeType::Sideways) => 1.2,   // Moderate stops in sideways markets
+            Some(RegimeType::HighVolatility) => 1.8, // Wider stops in high volatility
             None => 1.3,                         // Conservative when unknown
         }
     }
@@ -964,6 +976,10 @@ impl RiskRewardEngine {
             Some(RegimeType::Trending) => 1.5,   // Higher targets in trending (ride the trend)
             Some(RegimeType::Volatile) => 0.7,   // Lower targets in volatile (take profits quickly)
             Some(RegimeType::Crisis) => 0.5,     // Much lower targets in crisis (capital preservation)
+            Some(RegimeType::Bullish) => 1.3,    // Higher targets in bullish markets
+            Some(RegimeType::Bearish) => 0.6,    // Lower targets in bearish markets
+            Some(RegimeType::Sideways) => 0.9,   // Moderate targets in sideways markets
+            Some(RegimeType::HighVolatility) => 0.6, // Lower targets in high volatility
             None => 0.8,                         // Conservative when unknown
         }
     }
@@ -976,8 +992,8 @@ impl RiskRewardEngine {
 
         // Calculate short-term momentum (last 10 periods)
         let recent_data = &market_data[market_data.len() - 10..];
-        let first_price = recent_data[0].price;
-        let last_price = recent_data[recent_data.len() - 1].price;
+        let first_price = (recent_data[0].bid_price + recent_data[0].ask_price) / 2.0;
+        let last_price = (recent_data[recent_data.len() - 1].bid_price + recent_data[recent_data.len() - 1].ask_price) / 2.0;
         let momentum = (last_price - first_price) / first_price;
 
         // Scale momentum factor (0.8 to 1.4 range)
@@ -992,7 +1008,7 @@ impl RiskRewardEngine {
     }
 
     /// Get performance-based stop loss factor
-    async fn get_performance_based_stop_factor(&self, instrument_id: Uuid) -> f64 {
+    async fn get_performance_based_stop_factor(&self, _instrument_id: Uuid) -> f64 {
         // This would typically look at recent trade performance for this instrument
         // For now, return a default factor
         // TODO: Implement based on actual performance history
@@ -1000,7 +1016,7 @@ impl RiskRewardEngine {
     }
 
     /// Get performance-based profit target factor
-    async fn get_performance_based_profit_factor(&self, instrument_id: Uuid) -> f64 {
+    async fn get_performance_based_profit_factor(&self, _instrument_id: Uuid) -> f64 {
         // This would typically look at recent trade performance for this instrument
         // For now, return a default factor
         // TODO: Implement based on actual performance history
@@ -1023,11 +1039,7 @@ impl RiskRewardEngine {
         }
     }
 
-    /// Update regime information
-    pub async fn update_regime(&self, regime: RegimeType) {
-        let mut current_regime = self.current_regime.write().await;
-        *current_regime = Some(regime);
-    }
+
 
     /// Get current volatility metrics for an instrument
     pub async fn get_volatility_metrics(&self, instrument_id: Uuid, market_data: &[MarketTick]) -> Result<VolatilityMetrics> {
@@ -1072,7 +1084,7 @@ impl RiskRewardEngine {
     }
 
     /// Get Kelly Criterion metrics for an instrument
-    pub async fn get_kelly_metrics(&self, ai_signal: &AISignal, market_data: &[MarketTick]) -> Result<KellyMetrics> {
+    pub async fn get_kelly_metrics(&self, _ai_signal: &AISignal, market_data: &[MarketTick]) -> Result<KellyMetrics> {
         let returns = self.calculate_returns(market_data);
         let lookback_periods = self.config.kelly_lookback_periods.min(returns.len() as u32);
         let recent_returns = &returns[returns.len().saturating_sub(lookback_periods as usize)..];
@@ -1166,18 +1178,7 @@ impl RiskRewardEngine {
         variance.sqrt() * (252.0_f64).sqrt() // Annualized volatility
     }
 
-    /// Classify volatility regime
-    fn classify_volatility_regime(&self, volatility: f64) -> VolatilityRegime {
-        if volatility < 0.10 {
-            VolatilityRegime::Low
-        } else if volatility < 0.20 {
-            VolatilityRegime::Normal
-        } else if volatility < 0.30 {
-            VolatilityRegime::High
-        } else {
-            VolatilityRegime::Extreme
-        }
-    }
+
 
     /// Update portfolio positions
     pub async fn update_position(&self, instrument_id: Uuid, position_size: f64) -> Result<()> {
@@ -1205,7 +1206,7 @@ impl RiskRewardEngine {
         let total_exposure: f64 = positions.values().sum();
 
         // Calculate portfolio volatility and VaR
-        let (portfolio_vol, var_95, var_99) = self.calculate_portfolio_var(&positions, &volatility_tracker, &correlations);
+        let (_portfolio_vol, var_95, var_99) = self.calculate_portfolio_var(&positions, &volatility_tracker, &correlations);
 
         // Calculate concentration risk
         let concentration_risk = self.calculate_concentration_risk(&positions);

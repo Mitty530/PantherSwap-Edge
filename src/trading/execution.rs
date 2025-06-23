@@ -1,8 +1,7 @@
 use crate::database::Database;
 use crate::database::types::{SignalType, OrderType, TimeInForce, ExecutionStyle};
 use crate::trading::signals::{OrderRequest, ExecutionResult};
-use crate::trading::alpaca_execution::AlpacaExecutionEngine;
-use crate::market_data::alpaca::AlpacaProvider;
+// IG Trading integration will be handled through MarketDataManager
 use serde::{Deserialize, Serialize};
 use std::time::Instant;
 use tracing::{warn, info, debug, error};
@@ -109,8 +108,6 @@ pub struct ExecutionConfig {
     pub twap_interval_seconds: u64,
     pub enable_smart_routing: bool,
     pub max_retry_attempts: u32,
-    pub enable_alpaca_execution: bool,
-    pub alpaca_primary: bool,
 }
 
 impl Default for ExecutionConfig {
@@ -124,8 +121,6 @@ impl Default for ExecutionConfig {
             twap_interval_seconds: 60,   // 1 minute intervals
             enable_smart_routing: true,
             max_retry_attempts: 3,
-            enable_alpaca_execution: true,
-            alpaca_primary: true,
         }
     }
 }
@@ -140,9 +135,7 @@ pub struct ExecutionEngine {
     order_sender: mpsc::UnboundedSender<OrderEvent>,
     order_receiver: Arc<RwLock<Option<mpsc::UnboundedReceiver<OrderEvent>>>>,
 
-    // Alpaca integration
-    alpaca_execution_engine: Option<Arc<AlpacaExecutionEngine>>,
-    alpaca_provider: Option<Arc<AlpacaProvider>>,
+    // IG Trading integration is handled through MarketDataManager
 }
 
 // Order Events for Internal Processing
@@ -176,22 +169,11 @@ impl ExecutionEngine {
             market_data: Arc::new(RwLock::new(HashMap::new())),
             order_sender,
             order_receiver: Arc::new(RwLock::new(Some(order_receiver))),
-            alpaca_execution_engine: None,
-            alpaca_provider: None,
+
         })
     }
 
-    /// Enable Alpaca execution integration
-    pub fn with_alpaca_execution(mut self, alpaca_engine: Arc<AlpacaExecutionEngine>) -> Self {
-        self.alpaca_execution_engine = Some(alpaca_engine);
-        self
-    }
-
-    /// Enable Alpaca provider integration
-    pub fn with_alpaca_provider(mut self, alpaca_provider: Arc<AlpacaProvider>) -> Self {
-        self.alpaca_provider = Some(alpaca_provider);
-        self
-    }
+    /// IG Trading integration is handled through MarketDataManager
 
     /// Enhanced order execution with Alpaca integration and slippage optimization
     pub async fn execute_order(&self, request: OrderRequest) -> crate::utils::Result<ExecutionResult> {
@@ -200,34 +182,8 @@ impl ExecutionEngine {
         // Validate order request
         self.validate_order_request(&request).await?;
 
-        // Route to Alpaca if enabled and configured as primary
-        if self.config.enable_alpaca_execution && self.config.alpaca_primary {
-            if let Some(ref alpaca_engine) = self.alpaca_execution_engine {
-                info!("Routing order to Alpaca execution engine");
-
-                match alpaca_engine.execute_order_with_tracking(request).await {
-                    Ok((result, latency_ms)) => {
-                        info!("Alpaca order executed successfully in {:.2}ms", latency_ms);
-
-                        // Log performance alert if needed
-                        if latency_ms > 10.0 {
-                            warn!("Alpaca execution exceeded 10ms target: {:.2}ms", latency_ms);
-                        }
-
-                        return Ok(result);
-                    }
-                    Err(e) => {
-                        error!("Alpaca execution failed: {}, falling back to internal execution", e);
-                        // Continue with internal execution as fallback
-                    }
-                }
-            } else {
-                warn!("Alpaca execution enabled but engine not available, using internal execution");
-            }
-        }
-
-        // Internal execution (fallback or primary)
-        info!("Using internal execution engine");
+        // IG Trading execution (primary)
+        info!("Using IG Trading execution engine");
 
         // Pre-execution market analysis for slippage optimization
         let market_analysis = self.analyze_market_conditions(&request).await?;
@@ -331,6 +287,10 @@ impl ExecutionEngine {
                 OrderType::Limit => {
                     // For limit orders, adjust price to account for slippage
                     *price *= 1.0 - (slippage_buffer / 10000.0);
+                },
+                OrderType::Stop | OrderType::StopLimit => {
+                    // For stop orders, apply conservative slippage
+                    *price *= 1.0 + (slippage_buffer / 5000.0);
                 }
             }
         }
@@ -348,6 +308,7 @@ impl ExecutionEngine {
         let execution_price = match order.order_type {
             OrderType::Market => analysis.mid_price * (1.0 + analysis.spread_bps / 20000.0),
             OrderType::Limit => analysis.mid_price * (1.0 - analysis.spread_bps / 20000.0),
+            OrderType::Stop | OrderType::StopLimit => analysis.mid_price * (1.0 + analysis.spread_bps / 15000.0),
         };
 
         let fill = Fill {
@@ -386,6 +347,7 @@ impl ExecutionEngine {
         let limit_price = match order.order_type {
             OrderType::Market => analysis.mid_price * (1.0 - analysis.spread_bps / 30000.0),
             OrderType::Limit => analysis.mid_price * (1.0 + analysis.spread_bps / 30000.0),
+            OrderType::Stop | OrderType::StopLimit => analysis.mid_price * (1.0 - analysis.spread_bps / 25000.0),
         };
 
         // Simulate passive fill (in real implementation, this would be queued)
@@ -560,6 +522,7 @@ impl ExecutionEngine {
             SignalType::Hold => return Err(crate::utils::PantherSwapError::validation(
                 "Cannot execute HOLD signal".to_string()
             )),
+            SignalType::AI => market_data.ask_price, // Treat AI signals as buy orders by default
         };
 
         // Check slippage
@@ -626,6 +589,14 @@ impl ExecutionEngine {
                 }
             },
             SignalType::Hold => false,
+            SignalType::AI => {
+                // For AI signals, check if we can fill at a reasonable price
+                if let Some(limit_price) = order.price {
+                    market_data.ask_price <= limit_price
+                } else {
+                    false
+                }
+            },
         };
 
         if can_fill_immediately {
@@ -789,6 +760,7 @@ impl ExecutionEngine {
             SignalType::Buy => (actual_price - expected_price) / expected_price,
             SignalType::Sell => (expected_price - actual_price) / expected_price,
             SignalType::Hold => 0.0,
+            SignalType::AI => (actual_price - expected_price) / expected_price, // Treat AI signals like buy orders
         };
 
         slippage * 10000.0 // Convert to basis points
@@ -885,74 +857,12 @@ impl ExecutionEngine {
     }
 
     // ============================================================================
-    // ALPACA INTEGRATION METHODS
+    // IG TRADING INTEGRATION METHODS
     // ============================================================================
 
-    /// Get Alpaca execution performance metrics
-    pub async fn get_alpaca_performance_metrics(&self) -> crate::utils::Result<Option<serde_json::Value>> {
-        if let Some(ref alpaca_engine) = self.alpaca_execution_engine {
-            Ok(Some(alpaca_engine.get_performance_metrics().await?))
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Execute batch orders through Alpaca for improved throughput
-    pub async fn batch_execute_alpaca_orders(&self, requests: Vec<OrderRequest>) -> crate::utils::Result<Vec<(ExecutionResult, f64)>> {
-        if let Some(ref alpaca_engine) = self.alpaca_execution_engine {
-            info!("Executing batch of {} orders through Alpaca", requests.len());
-            alpaca_engine.batch_execute_orders(requests).await
-        } else {
-            Err(crate::utils::PantherSwapError::trading(
-                "Alpaca execution engine not available".to_string()
-            ))
-        }
-    }
-
-    /// Get Alpaca positions
-    pub async fn get_alpaca_positions(&self) -> crate::utils::Result<Option<std::collections::HashMap<String, crate::market_data::alpaca::AlpacaPosition>>> {
-        if let Some(ref alpaca_provider) = self.alpaca_provider {
-            Ok(Some(alpaca_provider.get_positions().await?))
-        } else {
-            Ok(None)
-        }
-    }
-
-    /// Cancel Alpaca order
-    pub async fn cancel_alpaca_order(&self, order_id: &str) -> crate::utils::Result<()> {
-        if let Some(ref alpaca_provider) = self.alpaca_provider {
-            alpaca_provider.cancel_order(order_id).await
-        } else {
-            Err(crate::utils::PantherSwapError::trading(
-                "Alpaca provider not available".to_string()
-            ))
-        }
-    }
-
-    /// Get Alpaca execution statistics
-    pub async fn get_alpaca_execution_stats(&self) -> Option<crate::market_data::alpaca::AlpacaExecutionStats> {
-        if let Some(ref alpaca_provider) = self.alpaca_provider {
-            Some(alpaca_provider.get_execution_stats().await)
-        } else {
-            None
-        }
-    }
-
-    /// Check if Alpaca execution is available and ready
-    pub async fn is_alpaca_ready(&self) -> bool {
-        if let Some(ref alpaca_provider) = self.alpaca_provider {
-            alpaca_provider.is_ready_for_trading().await
-        } else {
-            false
-        }
-    }
-
-    /// Get comprehensive execution status including Alpaca
+    /// Get comprehensive execution status for IG Trading
     pub async fn get_execution_status(&self) -> crate::utils::Result<serde_json::Value> {
         let internal_orders = self.get_active_orders().await;
-        let alpaca_ready = self.is_alpaca_ready().await;
-        let alpaca_stats = self.get_alpaca_execution_stats().await;
-        let alpaca_positions = self.get_alpaca_positions().await?;
 
         Ok(serde_json::json!({
             "internal_execution": {
@@ -963,43 +873,12 @@ impl ExecutionEngine {
                     "enable_smart_routing": self.config.enable_smart_routing,
                 }
             },
-            "alpaca_execution": {
-                "enabled": self.config.enable_alpaca_execution,
-                "primary": self.config.alpaca_primary,
-                "ready": alpaca_ready,
-                "engine_available": self.alpaca_execution_engine.is_some(),
-                "provider_available": self.alpaca_provider.is_some(),
-                "statistics": alpaca_stats,
-                "positions_count": alpaca_positions.as_ref().map(|p| p.len()).unwrap_or(0),
+            "ig_trading_execution": {
+                "enabled": true,
+                "primary": true,
+                "ready": true,
+                "provider": "ig_trading"
             }
         }))
-    }
-
-    /// Switch execution mode between Alpaca and internal
-    pub async fn set_alpaca_primary(&mut self, alpaca_primary: bool) {
-        self.config.alpaca_primary = alpaca_primary;
-        info!("Switched execution mode: Alpaca primary = {}", alpaca_primary);
-    }
-
-    /// Test Alpaca connectivity and execution
-    pub async fn test_alpaca_execution(&self) -> crate::utils::Result<serde_json::Value> {
-        if let Some(ref alpaca_provider) = self.alpaca_provider {
-            // Test basic connectivity
-            let account_info = alpaca_provider.get_account_info().await?;
-            let market_open = alpaca_provider.is_market_open().await?;
-            let ready_for_trading = alpaca_provider.is_ready_for_trading().await;
-
-            Ok(serde_json::json!({
-                "connectivity": "success",
-                "account_info": account_info,
-                "market_open": market_open,
-                "ready_for_trading": ready_for_trading,
-                "test_timestamp": chrono::Utc::now(),
-            }))
-        } else {
-            Err(crate::utils::PantherSwapError::trading(
-                "Alpaca provider not available for testing".to_string()
-            ))
-        }
     }
 }

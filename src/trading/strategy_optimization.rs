@@ -431,7 +431,7 @@ impl MLWeightOptimizer {
         let portfolio_return = self.calculate_weighted_return(current_weights, performance_metrics);
 
         // Calculate loss (negative of excess return over target)
-        let loss = -(portfolio_return - target_return);
+        let _loss = -(portfolio_return - target_return);
 
         // Calculate gradients for each strategy weight
         for strategy in [
@@ -597,11 +597,15 @@ impl MarketFeatureExtractor {
 
         // Market regime features
         match current_regime {
-            Some(RegimeType::Normal) => features.extend_from_slice(&[1.0, 0.0, 0.0, 0.0]),
-            Some(RegimeType::Trending) => features.extend_from_slice(&[0.0, 1.0, 0.0, 0.0]),
-            Some(RegimeType::Volatile) => features.extend_from_slice(&[0.0, 0.0, 1.0, 0.0]),
-            Some(RegimeType::Crisis) => features.extend_from_slice(&[0.0, 0.0, 0.0, 1.0]),
-            None => features.extend_from_slice(&[0.25, 0.25, 0.25, 0.25]), // Equal probability
+            Some(RegimeType::Normal) => features.extend_from_slice(&[1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            Some(RegimeType::Trending) => features.extend_from_slice(&[0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            Some(RegimeType::Volatile) => features.extend_from_slice(&[0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            Some(RegimeType::Crisis) => features.extend_from_slice(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]),
+            Some(RegimeType::Bullish) => features.extend_from_slice(&[0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]),
+            Some(RegimeType::Bearish) => features.extend_from_slice(&[0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0]),
+            Some(RegimeType::Sideways) => features.extend_from_slice(&[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0]),
+            Some(RegimeType::HighVolatility) => features.extend_from_slice(&[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]),
+            None => features.extend_from_slice(&[0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125]), // Equal probability
         }
 
         // Cross-strategy correlation features
@@ -1068,6 +1072,10 @@ impl StrategyWeightOptimizer {
             Some(RegimeType::Volatile) => 0.8,  // Lower target in volatile markets
             Some(RegimeType::Crisis) => 0.5,    // Much lower target in crisis
             Some(RegimeType::Normal) => 1.0,    // Normal target
+            Some(RegimeType::Bullish) => 1.3,   // Higher target in bullish markets
+            Some(RegimeType::Bearish) => 0.7,   // Lower target in bearish markets
+            Some(RegimeType::Sideways) => 0.9,  // Slightly lower target in sideways markets
+            Some(RegimeType::HighVolatility) => 0.6, // Lower target in high volatility
             None => 1.0,
         };
 

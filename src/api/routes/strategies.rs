@@ -180,7 +180,7 @@ pub struct BenchmarkComparison {
 /// List all trading strategies
 pub async fn list_strategies(
     Query(params): Query<StrategiesQuery>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<StrategiesResponse>>, StatusCode> {
     // Check permissions
@@ -221,7 +221,7 @@ pub async fn list_strategies(
 /// Get specific strategy details
 pub async fn get_strategy(
     Path(strategy_id): Path<Uuid>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<StrategyResponse>>, StatusCode> {
     // Check permissions
@@ -245,7 +245,7 @@ pub async fn get_strategy(
 pub async fn get_strategy_performance(
     Path(strategy_id): Path<Uuid>,
     Query(params): Query<StrategyPerformanceQuery>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
 ) -> Result<Json<ApiResponse<StrategyPerformanceResponse>>, StatusCode> {
     // Check permissions
@@ -268,9 +268,9 @@ pub async fn get_strategy_performance(
 /// Update strategy configuration
 pub async fn update_strategy(
     Path(strategy_id): Path<Uuid>,
-    Extension(state): Extension<AppState>,
+    Extension(_state): Extension<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
-    Json(request): Json<UpdateStrategyRequest>,
+    Json(_request): Json<UpdateStrategyRequest>,
 ) -> Result<Json<ApiResponse<StrategyResponse>>, StatusCode> {
     // Check permissions
     if !has_permission(&user, &Permission::WriteStrategies) {
@@ -294,7 +294,7 @@ pub async fn update_strategy(
 
 // Helper functions for mock data generation
 
-fn generate_mock_strategies(params: &StrategiesQuery) -> Vec<StrategyResponse> {
+fn generate_mock_strategies(_params: &StrategiesQuery) -> Vec<StrategyResponse> {
     vec![
         StrategyResponse {
             id: Uuid::new_v4(),
@@ -383,7 +383,7 @@ fn generate_mock_strategy(strategy_id: Uuid) -> StrategyResponse {
     }
 }
 
-fn generate_mock_performance(strategy_id: Uuid, params: &StrategyPerformanceQuery) -> StrategyPerformanceResponse {
+fn generate_mock_performance(_strategy_id: Uuid, _params: &StrategyPerformanceQuery) -> StrategyPerformanceResponse {
     StrategyPerformanceResponse {
         strategy_name: "MeanReversion".to_string(),
         time_period: TimePeriod {

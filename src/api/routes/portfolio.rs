@@ -206,7 +206,7 @@ pub async fn get_performance(
         "Portfolio performance requested"
     );
 
-    let trading_engine = state.trading_engine.lock().await;
+    let trading_engine = state.trading_engine.read().await;
     let portfolio_summary = trading_engine.get_portfolio_summary().await;
 
     // In a real implementation, this would calculate performance metrics
@@ -278,7 +278,7 @@ pub async fn get_summary(
 
     info!(user_id = %user.id, "Portfolio summary requested");
 
-    let trading_engine = state.trading_engine.lock().await;
+    let trading_engine = state.trading_engine.read().await;
     let portfolio_summary = trading_engine.get_portfolio_summary().await;
 
     let response = PortfolioSummaryResponse {

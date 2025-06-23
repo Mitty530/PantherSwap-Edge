@@ -1,0 +1,1 @@
+/Users/mamadouourydiallo/PantherSwap\ Edge/pantherswap-edge/scripts/target/debug/test_trading_performance: /Users/mamadouourydiallo/PantherSwap\ Edge/pantherswap-edge/scripts/test_trading_performance.rs

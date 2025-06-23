@@ -12,3 +12,6 @@ pub mod monitoring;
 pub mod deployment;
 pub mod utils;
 pub mod testing;
+
+// Re-export testing modules for external use
+pub use testing::*;

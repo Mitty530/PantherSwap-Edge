@@ -46,14 +46,22 @@ pub enum PantherSwapError {
 }
 
 impl PantherSwapError {
+    pub fn database(msg: impl Into<String>) -> Self {
+        Self::Database(sqlx::Error::RowNotFound) // Default to a generic database error
+    }
+
     pub fn market_data(msg: impl Into<String>) -> Self {
         Self::MarketData(msg.into())
     }
-    
+
     pub fn ai_prediction(msg: impl Into<String>) -> Self {
         Self::AIPrediction(msg.into())
     }
-    
+
+    pub fn ai(msg: impl Into<String>) -> Self {
+        Self::AIPrediction(msg.into())
+    }
+
     pub fn trading(msg: impl Into<String>) -> Self {
         Self::Trading(msg.into())
     }

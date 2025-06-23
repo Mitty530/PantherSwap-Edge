@@ -14,9 +14,7 @@ pub mod strategy_analytics_db;
 pub mod risk_reward_enhancement;
 pub mod execution_optimization;
 pub mod performance_monitoring;
-pub mod alpaca_execution;
-pub mod alpaca_trading_engine;
-pub mod alpaca_error_handling;
+
 
 pub use engine::{TradingEngine, TradingEngineConfig};
 pub use execution::{ExecutionEngine, ExecutionConfig, Order, OrderStatus, Fill, MarketData};
@@ -49,8 +47,4 @@ pub use performance_monitoring::{
     PerformanceBenchmark, PerformanceAlert, OptimizationRecommendation, ComprehensiveMetrics,
     TradeRecord, PositionInfo, AlertType, AlertSeverity, OptimizationType
 };
-pub use alpaca_execution::{AlpacaExecutionEngine, AlpacaOrderInfo, ExecutionStats};
-pub use alpaca_trading_engine::{AlpacaTradingEngine, AlpacaTradingConfig, TradingPerformanceMetrics};
-pub use alpaca_error_handling::{
-    AlpacaErrorHandler, RetryConfig, AlpacaError, AlpacaErrorType, CircuitBreakerState
-};
+

@@ -17,38 +17,7 @@ pub struct MarketQuote {
     pub data_quality: f64,
 }
 
-/// Alpha Vantage API response structures
-#[derive(Debug, Deserialize)]
-pub struct AlphaVantageResponse {
-    #[serde(rename = "Realtime Currency Exchange Rate")]
-    pub realtime_currency_exchange_rate: Option<AlphaVantageExchangeRate>,
-    #[serde(rename = "Error Message")]
-    pub error_message: Option<String>,
-    #[serde(rename = "Note")]
-    pub note: Option<String>,
-}
 
-#[derive(Debug, Deserialize)]
-pub struct AlphaVantageExchangeRate {
-    #[serde(rename = "1. From_Currency Code")]
-    pub from_currency_code: String,
-    #[serde(rename = "2. From_Currency Name")]
-    pub from_currency_name: String,
-    #[serde(rename = "3. To_Currency Code")]
-    pub to_currency_code: String,
-    #[serde(rename = "4. To_Currency Name")]
-    pub to_currency_name: String,
-    #[serde(rename = "5. Exchange Rate")]
-    pub exchange_rate: String,
-    #[serde(rename = "6. Last Refreshed")]
-    pub last_refreshed: String,
-    #[serde(rename = "7. Time Zone")]
-    pub time_zone: String,
-    #[serde(rename = "8. Bid Price")]
-    pub bid_price: String,
-    #[serde(rename = "9. Ask Price")]
-    pub ask_price: String,
-}
 
 /// Data quality assessment result
 #[derive(Debug, Clone)]

@@ -12,6 +12,8 @@ use tracing::{info, warn, error, debug};
 #[derive(Debug, Clone)]
 pub struct IGTradingConfig {
     pub api_key: String,
+    pub username: String,
+    pub password: String,
     pub security_token: String,
     pub cst: String,
     pub version: String,
@@ -34,7 +36,7 @@ pub struct IGTradingClient {
 }
 
 /// IG Trading market data response
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct IGMarketData {
     pub epic: String,
     pub instrument_name: String,
@@ -88,11 +90,26 @@ impl IGTradingClient {
     pub async fn authenticate(&mut self) -> Result<()> {
         info!("Authenticating with IG Trading API...");
 
+        // Check if credentials are available
+        if self.config.username.is_empty() || self.config.password.is_empty() {
+            warn!("IG Trading credentials not provided - using demo mode without authentication");
+            // For demo mode, we can skip authentication and use the provided tokens
+            if self.config.demo_mode {
+                self.session_token = Some(self.config.cst.clone());
+                info!("✅ IG Trading demo mode - using provided CST token");
+                return Ok(());
+            } else {
+                return Err(PantherSwapError::market_data(
+                    "IG Trading credentials (username/password) are required for authentication".to_string()
+                ));
+            }
+        }
+
         let auth_url = format!("{}/session", self.config.base_url);
-        
+
         let auth_body = serde_json::json!({
-            "identifier": "", // Username would go here in production
-            "password": "",   // Password would go here in production
+            "identifier": self.config.username,
+            "password": self.config.password,
             "encryptedPassword": false
         });
 
@@ -105,40 +122,96 @@ impl IGTradingClient {
             .json(&auth_body)
             .send()
             .await
-            .map_err(|e| PantherSwapError::market_data(format!("IG Trading auth request failed: {}", e)))?;
+            .map_err(|e| {
+                error!("IG Trading authentication request failed: {}", e);
+                PantherSwapError::market_data(format!("IG Trading auth request failed: {}", e))
+            })?;
 
         if response.status().is_success() {
             // Extract session tokens from headers
             if let Some(cst) = response.headers().get("CST") {
                 if let Ok(cst_str) = cst.to_str() {
                     self.session_token = Some(cst_str.to_string());
+                    info!("✅ IG Trading authentication successful - CST token acquired");
+                } else {
+                    warn!("Failed to parse CST token from response headers");
+                }
+            } else {
+                warn!("No CST token found in authentication response headers");
+            }
+
+            // Also try to extract X-SECURITY-TOKEN if available
+            if let Some(security_token) = response.headers().get("X-SECURITY-TOKEN") {
+                if let Ok(token_str) = security_token.to_str() {
+                    debug!("Security token updated from authentication response");
                 }
             }
 
-            info!("✅ IG Trading authentication successful");
             Ok(())
         } else {
             let status = response.status();
             let error_text = response.text().await.unwrap_or_default();
-            error!("IG Trading authentication failed: {} - {}", status, error_text);
-            Err(PantherSwapError::market_data(format!("IG Trading auth failed: {}", status)))
+
+            // Provide more specific error messages based on status code
+            let error_message = match status.as_u16() {
+                401 => "Authentication failed - Invalid credentials or API key".to_string(),
+                403 => "Access forbidden - Check API permissions".to_string(),
+                429 => "Rate limit exceeded - Too many authentication attempts".to_string(),
+                500..=599 => "IG Trading server error - Try again later".to_string(),
+                _ => format!("Authentication failed with status {}: {}", status, error_text),
+            };
+
+            error!("IG Trading authentication failed: {}", error_message);
+            Err(PantherSwapError::market_data(error_message))
         }
     }
 
-    /// Fetch market data for instruments
+    /// Fetch market data for instruments with retry logic
     pub async fn fetch_market_data(&mut self, instruments: &[String]) -> Result<Vec<MarketTick>> {
         if self.session_token.is_none() {
             self.authenticate().await?;
         }
 
         let mut market_ticks = Vec::new();
+        let mut failed_instruments = Vec::new();
 
         for instrument in instruments {
-            match self.fetch_instrument_data(instrument).await {
-                Ok(tick) => market_ticks.push(tick),
-                Err(e) => {
-                    warn!("Failed to fetch data for {}: {}", instrument, e);
-                    continue;
+            let mut retry_count = 0;
+            let max_retries = self.config.retry_attempts;
+
+            loop {
+                match self.fetch_instrument_data(instrument).await {
+                    Ok(tick) => {
+                        market_ticks.push(tick);
+                        break;
+                    }
+                    Err(e) => {
+                        retry_count += 1;
+
+                        if retry_count <= max_retries {
+                            warn!("Failed to fetch data for {} (attempt {}/{}): {}",
+                                  instrument, retry_count, max_retries, e);
+
+                            // Check if it's an authentication error
+                            if e.to_string().contains("401") || e.to_string().contains("Unauthorized") {
+                                info!("Authentication error detected, re-authenticating...");
+                                if let Err(auth_err) = self.authenticate().await {
+                                    error!("Re-authentication failed: {}", auth_err);
+                                    failed_instruments.push(instrument.clone());
+                                    break;
+                                }
+                            }
+
+                            // Exponential backoff
+                            let delay = std::time::Duration::from_millis(100 * (2_u64.pow(retry_count - 1)));
+                            tokio::time::sleep(delay).await;
+                        } else {
+                            error!("Failed to fetch data for {} after {} attempts: {}",
+                                   instrument, max_retries, e);
+                            failed_instruments.push(instrument.clone());
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -146,7 +219,13 @@ impl IGTradingClient {
             self.enforce_rate_limit().await;
         }
 
-        info!("Fetched market data for {} instruments from IG Trading", market_ticks.len());
+        if !failed_instruments.is_empty() {
+            warn!("Failed to fetch data for {} instruments: {:?}",
+                  failed_instruments.len(), failed_instruments);
+        }
+
+        info!("Fetched market data for {} instruments from IG Trading ({} failed)",
+              market_ticks.len(), failed_instruments.len());
         Ok(market_ticks)
     }
 
@@ -179,6 +258,7 @@ impl IGTradingClient {
                 .map_err(|e| PantherSwapError::market_data(format!("Failed to parse IG Trading response: {}", e)))?;
 
             // Convert IG data to MarketTick
+            let mid_price = (ig_data.bid + ig_data.offer) / 2.0;
             let market_tick = MarketTick {
                 timestamp: Utc::now(),
                 instrument_id: Uuid::new_v4(), // In production, map epic to UUID
@@ -187,11 +267,16 @@ impl IGTradingClient {
                 ask_price: ig_data.offer,
                 bid_size: 1000.0, // Default size - IG doesn't provide this in basic API
                 ask_size: 1000.0,
-                last_price: Some((ig_data.bid + ig_data.offer) / 2.0),
+                last_price: Some(mid_price),
                 volume: None, // Not available in basic market data
                 spread: ig_data.offer - ig_data.bid,
                 data_quality_score: 0.95, // IG is a reliable source
                 raw_data: serde_json::to_value(&ig_data).unwrap_or_default(),
+                // Backward compatibility fields
+                symbol: Some(ig_data.epic.clone()),
+                price: Some(mid_price),
+                bid: Some(ig_data.bid),
+                ask: Some(ig_data.offer),
             };
 
             debug!("Fetched IG Trading data for {}: bid={}, offer={}", instrument, ig_data.bid, ig_data.offer);
@@ -218,10 +303,55 @@ impl IGTradingClient {
         self.last_request_time = Some(Utc::now());
     }
 
+    /// Validate IG Trading configuration
+    pub async fn validate_configuration(&self) -> Result<()> {
+        info!("Validating IG Trading configuration...");
+
+        // Check required fields
+        if self.config.api_key.is_empty() {
+            return Err(PantherSwapError::market_data(
+                "IG Trading API key is required".to_string()
+            ));
+        }
+
+        if !self.config.demo_mode && (self.config.username.is_empty() || self.config.password.is_empty()) {
+            return Err(PantherSwapError::market_data(
+                "IG Trading username and password are required for production mode".to_string()
+            ));
+        }
+
+        if self.config.demo_mode && self.config.cst.is_empty() {
+            warn!("Demo mode enabled but no CST token provided - authentication may be required");
+        }
+
+        // Validate URL format
+        if !self.config.base_url.starts_with("https://") {
+            return Err(PantherSwapError::market_data(
+                "IG Trading base URL must use HTTPS".to_string()
+            ));
+        }
+
+        // Validate rate limiting
+        if self.config.rate_limit_per_minute == 0 {
+            return Err(PantherSwapError::market_data(
+                "Rate limit must be greater than 0".to_string()
+            ));
+        }
+
+        info!("✅ IG Trading configuration validation passed");
+        Ok(())
+    }
+
     /// Test connection to IG Trading API
     pub async fn test_connection(&mut self) -> Result<bool> {
         info!("Testing IG Trading API connection...");
-        
+
+        // First validate configuration
+        if let Err(e) = self.validate_configuration().await {
+            error!("Configuration validation failed: {}", e);
+            return Ok(false);
+        }
+
         match self.authenticate().await {
             Ok(_) => {
                 info!("✅ IG Trading API connection test successful");
@@ -267,12 +397,97 @@ impl IGTradingClient {
             Err(PantherSwapError::market_data(format!("Failed to get account info: {}", status)))
         }
     }
+
+    /// Get market quote for a specific symbol
+    pub async fn get_market_quote(&mut self, symbol: &str) -> Result<crate::market_data::types::MarketQuote> {
+        let market_ticks = self.fetch_market_data(&vec![symbol.to_string()]).await?;
+
+        if let Some(tick) = market_ticks.first() {
+            let mid_price = (tick.bid_price + tick.ask_price) / 2.0;
+            let spread = tick.ask_price - tick.bid_price;
+
+            Ok(crate::market_data::types::MarketQuote {
+                symbol: symbol.to_string(),
+                provider: "ig_trading".to_string(),
+                timestamp: tick.timestamp,
+                bid_price: tick.bid_price,
+                ask_price: tick.ask_price,
+                mid_price,
+                bid_size: None, // IG Trading doesn't provide size in basic quotes
+                ask_size: None,
+                volume: tick.volume,
+                spread: Some(spread),
+                data_quality: 0.9, // Default quality score for IG Trading
+            })
+        } else {
+            Err(PantherSwapError::market_data(
+                format!("No market data available for symbol: {}", symbol)
+            ))
+        }
+    }
+
+    /// Get multiple quotes efficiently
+    pub async fn get_multiple_quotes(&mut self, symbols: &[String]) -> Result<std::collections::HashMap<String, crate::market_data::types::MarketQuote>> {
+        let market_ticks = self.fetch_market_data(symbols).await?;
+        let mut quotes = std::collections::HashMap::new();
+
+        for (i, tick) in market_ticks.iter().enumerate() {
+            let symbol = if i < symbols.len() {
+                symbols[i].clone()
+            } else {
+                format!("SYMBOL_{}", tick.instrument_id)
+            };
+
+            let mid_price = (tick.bid_price + tick.ask_price) / 2.0;
+            let spread = tick.ask_price - tick.bid_price;
+
+            let quote = crate::market_data::types::MarketQuote {
+                symbol: symbol.clone(),
+                provider: "ig_trading".to_string(),
+                timestamp: tick.timestamp,
+                bid_price: tick.bid_price,
+                ask_price: tick.ask_price,
+                mid_price,
+                bid_size: None,
+                ask_size: None,
+                volume: tick.volume,
+                spread: Some(spread),
+                data_quality: 0.9,
+            };
+            quotes.insert(symbol, quote);
+        }
+
+        Ok(quotes)
+    }
+
+    /// Start streaming for specific symbols (placeholder implementation)
+    pub async fn start_streaming(&self) -> Result<()> {
+        info!("Starting IG Trading streaming...");
+        // This would implement WebSocket streaming in a full implementation
+        warn!("IG Trading streaming not yet implemented - using polling instead");
+        Ok(())
+    }
+
+    /// Start streaming for specific symbols
+    pub async fn start_streaming_for_symbols(&self, symbols: Vec<String>) -> Result<()> {
+        info!("Starting IG Trading streaming for {} symbols", symbols.len());
+        // This would implement WebSocket streaming for specific symbols
+        warn!("IG Trading symbol-specific streaming not yet implemented");
+        Ok(())
+    }
+
+    /// Check if client is in demo mode
+    pub fn is_demo_mode(&self) -> bool {
+        self.config.demo_mode
+    }
 }
 
 impl Default for IGTradingConfig {
     fn default() -> Self {
         Self {
             api_key: String::new(),
+            username: String::new(),
+            password: String::new(),
             security_token: String::new(),
             cst: String::new(),
             version: "2".to_string(),

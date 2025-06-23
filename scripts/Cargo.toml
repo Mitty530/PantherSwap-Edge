@@ -1,0 +1,42 @@
+[package]
+name = "connectivity_test"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "test_connectivity"
+path = "test_connectivity.rs"
+
+[[bin]]
+name = "test_market_data"
+path = "test_market_data.rs"
+
+[[bin]]
+name = "test_simple_storage"
+path = "test_simple_storage.rs"
+
+[[bin]]
+name = "test_ai_simulation"
+path = "test_ai_simulation.rs"
+
+[[bin]]
+name = "test_trading_performance"
+path = "test_trading_performance.rs"
+
+[[bin]]
+name = "test_end_to_end"
+path = "test_end_to_end.rs"
+
+[[bin]]
+name = "run_all_tests"
+path = "run_all_tests.rs"
+
+[dependencies]
+tokio = { version = "1.0", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+serde_json = "1.0"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "rust_decimal"] }
+dotenvy = "0.15"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4"] }
+rust_decimal = "1.0"

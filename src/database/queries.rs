@@ -1572,62 +1572,64 @@ pub async fn get_alpaca_orders_by_status(
     Ok(result)
 }
 
-/// Insert Alpaca position snapshot
-pub async fn insert_alpaca_position(pool: &PgPool, position: &crate::market_data::alpaca::AlpacaPosition) -> Result<()> {
-    sqlx::query!(
-        r#"
-        INSERT INTO alpaca_positions
-        (symbol, qty, side, market_value, cost_basis, unrealized_pl, unrealized_plpc, current_price,
-         position_data)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        "#,
-        position.symbol,
-        position.qty,
-        position.side,
-        position.market_value,
-        position.cost_basis,
-        position.unrealized_pl,
-        position.unrealized_plpc,
-        position.current_price,
-        serde_json::json!(position)
-    )
-    .execute(pool)
-    .await?;
+// Alpaca integration temporarily disabled - focusing on IG Trading
+// /// Insert Alpaca position snapshot
+// pub async fn insert_alpaca_position(pool: &PgPool, position: &crate::market_data::alpaca::AlpacaPosition) -> Result<()> {
+//     sqlx::query!(
+//         r#"
+//         INSERT INTO alpaca_positions
+//         (symbol, qty, side, market_value, cost_basis, unrealized_pl, unrealized_plpc, current_price,
+//          position_data)
+//         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+//         "#,
+//         position.symbol,
+//         position.qty,
+//         position.side,
+//         position.market_value,
+//         position.cost_basis,
+//         position.unrealized_pl,
+//         position.unrealized_plpc,
+//         position.current_price,
+//         serde_json::json!(position)
+//     )
+//     .execute(pool)
+//     .await?;
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-/// Get current Alpaca positions
-pub async fn get_current_alpaca_positions(pool: &PgPool) -> Result<Vec<crate::market_data::alpaca::AlpacaPosition>> {
-    let positions = sqlx::query!(
-        r#"
-        SELECT DISTINCT ON (symbol) symbol, qty, side, market_value, cost_basis,
-               unrealized_pl, unrealized_plpc, current_price, position_data
-        FROM alpaca_positions
-        ORDER BY symbol, created_at DESC
-        "#
-    )
-    .fetch_all(pool)
-    .await?;
+// Alpaca integration temporarily disabled - focusing on IG Trading
+// /// Get current Alpaca positions
+// pub async fn get_current_alpaca_positions(pool: &PgPool) -> Result<Vec<crate::market_data::alpaca::AlpacaPosition>> {
+//     let positions = sqlx::query!(
+//         r#"
+//         SELECT DISTINCT ON (symbol) symbol, qty, side, market_value, cost_basis,
+//                unrealized_pl, unrealized_plpc, current_price, position_data
+//         FROM alpaca_positions
+//         ORDER BY symbol, created_at DESC
+//         "#
+//     )
+//     .fetch_all(pool)
+//     .await?;
 
-    let mut result = Vec::new();
-    for row in positions {
-        result.push(crate::market_data::alpaca::AlpacaPosition {
-            symbol: row.symbol,
-            qty: row.qty,
-            side: row.side,
-            market_value: row.market_value,
-            cost_basis: row.cost_basis,
-            unrealized_pl: row.unrealized_pl,
-            unrealized_plpc: row.unrealized_plpc,
-            current_price: row.current_price,
-            lastday_price: 0.0, // Not stored in this table
-            change_today: 0.0,  // Not stored in this table
-        });
-    }
+//     let mut result = Vec::new();
+//     for row in positions {
+//         result.push(crate::market_data::alpaca::AlpacaPosition {
+//             symbol: row.symbol,
+//             qty: row.qty,
+//             side: row.side,
+//             market_value: row.market_value,
+//             cost_basis: row.cost_basis,
+//             unrealized_pl: row.unrealized_pl,
+//             unrealized_plpc: row.unrealized_plpc,
+//             current_price: row.current_price,
+//             lastday_price: 0.0, // Not stored in this table
+//             change_today: 0.0,  // Not stored in this table
+//         });
+//     }
 
-    Ok(result)
-}
+//     Ok(result)
+// }
 
 /// Insert Alpaca execution statistics
 pub async fn insert_alpaca_execution_stats(pool: &PgPool, stats: &crate::market_data::alpaca::AlpacaExecutionStats) -> Result<()> {

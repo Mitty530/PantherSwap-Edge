@@ -6,18 +6,16 @@ use crate::ai::hmm_regime::{
     create_hf_hmm_regime_detector, MultiScaleHMMRegimeDetector, create_multi_scale_hmm_detector
 };
 use crate::ai::hmm_performance_validator::{HMMPerformanceValidator, PerformanceValidationConfig};
-use crate::trading::signals::{AISignal, RegimeSignal};
-use crate::trading::engine::TradingEngine;
-use crate::database::types::{MarketTick, RegimeType};
+use crate::trading::signals::RegimeSignal;
+use crate::database::types::MarketTick;
 use crate::market_data::MarketDataManager;
 use crate::utils::{Result, PantherSwapError};
-use chrono::{DateTime, Utc, Duration};
+use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
-use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::{RwLock, mpsc};
 use uuid::Uuid;
-use tracing::{info, warn, error, debug};
+use tracing::{info, error};
 use std::time::Instant;
 
 /// HMM Integration Configuration
@@ -306,14 +304,26 @@ impl HMMIntegrationManager {
             // Use multi-scale detector for better accuracy
             let mut detector = self.multi_scale_detector.write().await;
             detector.update_with_tick(market_tick)?;
-            detector.detect_current_regime()
+
+            // Convert MultiScaleRegimeSignal to RegimeSignal if available
+            Ok(detector.detect_current_regime().and_then(|multi_scale_signal| {
+                multi_scale_signal.consensus_regime.map(|consensus_regime| RegimeSignal {
+                    current_regime: consensus_regime,
+                    regime: consensus_regime,
+                    confidence: multi_scale_signal.consensus_confidence,
+                    timestamp: multi_scale_signal.timestamp,
+                    transition_probability: multi_scale_signal.transition_probability,
+                    regime_strength: multi_scale_signal.regime_strength,
+                    expected_duration_minutes: 30, // Default duration
+                })
+            }))
         } else {
             // Use enhanced single-scale detector with optimized inference
             let mut detector = self.enhanced_detector.write().await;
             let mut inference = self.optimized_inference.write().await;
 
             detector.update_with_tick(market_tick)?;
-            inference.fast_regime_detection(&*detector, &observation)
+            Ok(inference.fast_regime_detection(&*detector, &observation)?)
         }
     }
 
@@ -321,7 +331,7 @@ impl HMMIntegrationManager {
     async fn detect_regime_baseline(&self, market_tick: &MarketTick) -> Result<Option<RegimeSignal>> {
         let mut detector = self.baseline_detector.write().await;
         detector.update_with_tick(market_tick)?;
-        detector.detect_current_regime()
+        Ok(detector.detect_current_regime())
     }
 
     /// Determine if enhanced model should be used based on A/B testing
@@ -360,8 +370,8 @@ impl HMMIntegrationManager {
             0.02, // volatility (placeholder)
             0.0,  // trend (placeholder)
             0.0,  // momentum (placeholder)
-            0.0,  // skewness (placeholder)
-            0.0,  // kurtosis (placeholder)
+            0.0,  // price_skewness (placeholder)
+            0.0,  // price_kurtosis (placeholder)
             0.0,  // autocorrelation (placeholder)
             0.0,  // order_flow_imbalance (placeholder)
             0.0,  // effective_spread (placeholder)
@@ -377,23 +387,26 @@ impl HMMIntegrationManager {
             transition_probability: 0.1,
             // Additional fields with default values
             momentum: 0.0,
-            skewness: 0.0,
-            kurtosis: 0.0,
+            price_skewness: 0.0,  // Fixed field name
+            price_kurtosis: 0.0,  // Fixed field name
             autocorrelation: 0.0,
+            regime_persistence: 0.5,  // Added missing field
             order_flow_imbalance: 0.0,
             effective_spread: spread,
             price_impact: 0.0,
             market_depth_ratio: tick.bid_size / (tick.ask_size + 1e-8),
             garch_volatility: 0.02,
             volatility_persistence: 0.5,
+            volatility_clustering_score: 0.0,  // Added missing field
             hurst_exponent: 0.5,
             fractal_dimension: 1.5,
             regime_strength: 0.5,
+            regime_transition_signal: 0.0,  // Added missing field
         })
     }
 
     /// Record inference performance metrics
-    async fn record_inference_metrics(&self, instrument_id: Uuid, latency_ms: f64, is_enhanced: bool) {
+    async fn record_inference_metrics(&self, _instrument_id: Uuid, latency_ms: f64, is_enhanced: bool) {
         let mut metrics = self.performance_metrics.write().await;
 
         metrics.total_inferences += 1;
@@ -636,7 +649,7 @@ impl HMMIntegrationManager {
     }
 
     /// Update accuracy for completed predictions
-    pub async fn update_prediction_accuracy(&self, instrument_id: Uuid, was_correct: bool, model_type: &str) {
+    pub async fn update_prediction_accuracy(&self, _instrument_id: Uuid, was_correct: bool, model_type: &str) {
         let mut metrics = self.performance_metrics.write().await;
 
         if was_correct {

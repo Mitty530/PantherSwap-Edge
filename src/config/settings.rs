@@ -51,10 +51,28 @@ pub struct MarketDataConfig {
     pub alpha_vantage_api_key: String,
     pub iex_cloud_api_key: String,
     pub alpaca: AlpacaConfig,
+    pub ig_trading: IGTradingConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct IGTradingConfig {
+    pub api_key: String,
+    pub username: String,
+    pub password: String,
+    pub security_token: String,
+    pub cst: String,
+    pub version: String,
+    pub base_url: String,
+    pub content_type: String,
+    pub accept: String,
+    pub demo_mode: bool,
+    pub rate_limit_per_minute: u32,
+    pub connection_timeout_ms: u64,
+    pub retry_attempts: u32,
 }
 
 fn default_primary_provider() -> String {
-    "alpaca".to_string()
+    "ig_trading".to_string()
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -191,8 +209,8 @@ impl Default for Settings {
                 connection_pool_monitoring: true,
             },
             market_data: MarketDataConfig {
-                providers: vec!["alpaca".to_string(), "alpha_vantage".to_string()],
-                primary_provider: "alpaca".to_string(),
+                providers: vec!["ig_trading".to_string(), "alpaca".to_string(), "alpha_vantage".to_string()],
+                primary_provider: "ig_trading".to_string(),
                 instruments: vec![
                     "AAPL".to_string(),
                     "MSFT".to_string(),
@@ -222,6 +240,21 @@ impl Default for Settings {
                     connection_timeout_ms: 5000,
                     retry_attempts: 3,
                     enable_order_execution: true,
+                },
+                ig_trading: IGTradingConfig {
+                    api_key: std::env::var("IG_TRADING_API_KEY").unwrap_or_else(|_| "3ded3ba7db96187488bf8773b86bdf3e8fc42e9b".to_string()),
+                    username: std::env::var("IG_TRADING_USERNAME").unwrap_or_default(),
+                    password: std::env::var("IG_TRADING_PASSWORD").unwrap_or_default(),
+                    security_token: std::env::var("IG_TRADING_SECURITY_TOKEN").unwrap_or_else(|_| "1206a1630c34bcc90fdcc1b62fc5920fa7ed3a216ae09933430d3de2c6bcf6CD01112".to_string()),
+                    cst: std::env::var("IG_TRADING_CST").unwrap_or_else(|_| "48417021199921da08b95b210d8f9492c36614232983a9f1f3e1a8f0748ce33CC01113".to_string()),
+                    version: "2".to_string(),
+                    base_url: "https://demo-api.ig.com/gateway/deal".to_string(),
+                    content_type: "application/json; charset=UTF-8".to_string(),
+                    accept: "application/json; charset=UTF-8".to_string(),
+                    demo_mode: true,
+                    rate_limit_per_minute: 100,
+                    connection_timeout_ms: 5000,
+                    retry_attempts: 3,
                 },
             },
             trading: TradingConfig {

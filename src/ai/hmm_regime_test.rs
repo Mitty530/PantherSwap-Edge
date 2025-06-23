@@ -21,6 +21,11 @@ mod tests {
             spread: 0.02,
             data_quality_score: 1.0,
             raw_data: serde_json::Value::Null,
+            // Backward compatibility fields
+            symbol: Some("TEST".to_string()),
+            price: Some(price),
+            bid: Some(price - 0.01),
+            ask: Some(price + 0.01),
         }
     }
 

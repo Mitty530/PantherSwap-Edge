@@ -127,7 +127,7 @@ pub async fn submit_order(
     };
 
     // Submit order through trading engine
-    let trading_engine = state.trading_engine.lock().await;
+    let trading_engine = state.trading_engine.read().await;
     let order_id = match trading_engine.submit_order(order_request).await {
         Ok(id) => id,
         Err(e) => {
@@ -204,7 +204,7 @@ pub async fn get_order(
         "Order details requested"
     );
 
-    let trading_engine = state.trading_engine.lock().await;
+    let trading_engine = state.trading_engine.read().await;
     let order = match trading_engine.get_order_details(order_id).await {
         Some(order) => order,
         None => {
@@ -238,7 +238,7 @@ pub async fn list_orders(
     let limit = params.limit.unwrap_or(50).min(1000);
     let offset = params.offset.unwrap_or(0);
 
-    let trading_engine = state.trading_engine.lock().await;
+    let trading_engine = state.trading_engine.read().await;
     
     // Get orders based on filters
     let orders = match trading_engine.get_orders_with_filters(

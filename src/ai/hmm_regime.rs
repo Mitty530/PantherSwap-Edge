@@ -3,7 +3,7 @@ use crate::database::types::{MarketTick, RegimeType};
 use crate::trading::signals::RegimeSignal;
 use crate::utils::{Result, PantherSwapError};
 use chrono::{DateTime, Utc, Duration};
-use tracing::{info, warn, debug, error};
+use tracing::warn;
 use ndarray::{Array1, Array2, Array3};
 use serde::{Serialize, Deserialize};
 use std::collections::{VecDeque, HashMap};
@@ -2190,9 +2190,12 @@ impl HMMRegimeDetector {
         }
 
         Some(RegimeSignal {
-            current_regime,
+            current_regime: current_regime.clone(),
+            regime: current_regime, // Alias for backward compatibility
             transition_probability,
             confidence,
+            regime_strength: confidence, // Alias for confidence for backward compatibility
+            expected_duration_minutes: 30, // Default 30 minutes
             timestamp: Utc::now(),
         })
     }
@@ -2730,7 +2733,8 @@ impl HMMRegimeDetector {
             return 0.0;
         }
 
-        let recent_obs = &self.observations[self.observations.len().saturating_sub(10)..];
+        let start_idx = self.observations.len().saturating_sub(10);
+        let recent_obs: Vec<&MarketObservation> = self.observations.range(start_idx..).collect();
         let mean = recent_obs.iter().map(|obs| obs.features[0]).sum::<f64>() / recent_obs.len() as f64;
         let variance = recent_obs.iter()
             .map(|obs| (obs.features[0] - mean).powi(2))
@@ -2943,7 +2947,7 @@ impl HMMRegimeDetector {
             }
 
             // Normalize and add to log-likelihood
-            let norm_factor = current_state_probs.sum();
+            let norm_factor: f64 = current_state_probs.sum();
             if norm_factor > 1e-10 {
                 total_ll += norm_factor.ln();
                 current_state_probs /= norm_factor;
@@ -3491,7 +3495,8 @@ impl ChangePointDetector {
         let mean2 = second_half.iter().sum::<f64>() / second_half.len() as f64;
 
         let mean_diff = (mean2 - mean1).abs();
-        let std_dev = self.calculate_std_dev(&self.price_history.iter().cloned().collect());
+        let price_vec: Vec<f64> = self.price_history.iter().cloned().collect();
+        let std_dev = self.calculate_std_dev(&price_vec);
 
         let normalized_diff = if std_dev > 1e-8 {
             mean_diff / std_dev
@@ -3661,11 +3666,11 @@ impl VolatilityBreakoutDetector {
 
         let pattern_detected = is_increasing || is_spike || is_clustering;
         let confidence = if pattern_detected {
-            let mut score = 0.0;
+            let mut score: f64 = 0.0;
             if is_increasing { score += 0.3; }
             if is_spike { score += 0.5; }
             if is_clustering { score += 0.2; }
-            score.min(1.0)
+            score.min(1.0_f64)
         } else {
             0.0
         };
@@ -4047,7 +4052,8 @@ impl OptimizedHMMInference {
         };
 
         Ok(Some(RegimeSignal {
-            regime: regime_type,
+            current_regime: regime_type,
+            regime: regime_type, // Alias for backward compatibility
             confidence,
             timestamp: Utc::now(),
             transition_probability: 1.0 - confidence,
@@ -4169,7 +4175,8 @@ impl OptimizedHMMInference {
         };
 
         Ok(Some(RegimeSignal {
-            regime: regime_type,
+            current_regime: regime_type,
+            regime: regime_type, // Alias for backward compatibility
             confidence,
             timestamp: Utc::now(),
             transition_probability: 1.0 - confidence,
@@ -4322,6 +4329,11 @@ impl HMMBacktester {
                 spread: obs.bid_ask_spread,
                 data_quality_score: 0.95,
                 raw_data: serde_json::json!({}),
+                // Backward compatibility fields
+                symbol: Some("TEST".to_string()),
+                price: Some(obs.features[0]),
+                bid: Some(obs.features[0] - obs.bid_ask_spread / 2.0),
+                ask: Some(obs.features[0] + obs.bid_ask_spread / 2.0),
             })?;
         }
 
@@ -4349,7 +4361,7 @@ impl HMMBacktester {
                 // This is a simplified version - in practice, you'd have labeled data
                 let actual_regime = self.infer_actual_regime(obs);
                 let correct = if let Some(actual) = actual_regime {
-                    actual == regime_signal.regime
+                    Some(actual == regime_signal.regime)
                 } else {
                     None
                 };

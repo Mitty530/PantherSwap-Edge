@@ -1,0 +1,159 @@
+# Default values for pantherswap-edge
+replicaCount: 3
+
+image:
+  repository: pantherswap-edge
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets:
+  - name: pantherswap-edge-registry
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65532
+  capabilities:
+    drop:
+    - ALL
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/rate-limit: "1000"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: api.pantherswap.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: pantherswap-edge-tls
+      hosts:
+        - api.pantherswap.com
+
+resources:
+  limits:
+    cpu: 2
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app.kubernetes.io/name
+            operator: In
+            values:
+            - pantherswap-edge
+        topologyKey: kubernetes.io/hostname
+
+# Application configuration
+config:
+  runMode: production
+  logLevel: info
+  
+  server:
+    host: "0.0.0.0"
+    port: 8080
+    workers: 8
+
+  database:
+    poolSize: 100
+    connectionTimeoutMs: 3000
+    queryTimeoutMs: 5000
+
+  trading:
+    enableLiveTrading: true
+    targetLatencyMs: 5.0
+    targetThroughputTps: 2000.0
+    maxConcurrentOrders: 2000
+
+  ai:
+    enablePredictions: true
+    enableTraining: true
+    maxLatencyMs: 50
+
+  monitoring:
+    healthCheckIntervalSeconds: 30
+    enableAutoRecovery: true
+    systemHealthThreshold: 0.8
+
+# External dependencies
+postgresql:
+  enabled: false  # Use external TimescaleDB
+  
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "redis-password"
+  master:
+    persistence:
+      enabled: true
+      size: 8Gi
+
+# Monitoring stack
+monitoring:
+  prometheus:
+    enabled: true
+  grafana:
+    enabled: true
+    adminPassword: "admin-password"
+
+# Secrets (should be provided externally)
+secrets:
+  databaseUrl: ""
+  alphaVantageApiKey: ""
+  jwtSecret: ""
+  encryptionKey: ""
+
+# Network policies
+networkPolicy:
+  enabled: true

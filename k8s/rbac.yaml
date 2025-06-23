@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pantherswap-edge
+  namespace: pantherswap-edge
+  labels:
+    app.kubernetes.io/name: pantherswap-edge
+    app.kubernetes.io/component: rbac
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pantherswap-edge
+  namespace: pantherswap-edge
+  labels:
+    app.kubernetes.io/name: pantherswap-edge
+    app.kubernetes.io/component: rbac
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pantherswap-edge
+  namespace: pantherswap-edge
+  labels:
+    app.kubernetes.io/name: pantherswap-edge
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: pantherswap-edge
+  namespace: pantherswap-edge
+roleRef:
+  kind: Role
+  name: pantherswap-edge
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pantherswap-edge
+  namespace: pantherswap-edge
+  labels:
+    app.kubernetes.io/name: pantherswap-edge
+    app.kubernetes.io/component: security
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: pantherswap-edge
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 53   # DNS
+    - protocol: UDP
+      port: 53   # DNS
+    - protocol: TCP
+      port: 5432 # PostgreSQL/TimescaleDB

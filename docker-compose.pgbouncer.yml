@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  pgbouncer:
+    image: pgbouncer/pgbouncer:1.21.0
+    container_name: pantherswap-pgbouncer
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+      - "9127:9127"  # Metrics port
+    environment:
+      # Database connection settings
+      DATABASES_HOST: jqrbtbc5nw.w0mq2s13iy.tsdb.cloud.timescale.com
+      DATABASES_PORT: 35762
+      DATABASES_USER: tsdbadmin
+      DATABASES_PASSWORD: sz2eu577bgqi5767
+      DATABASES_DBNAME: tsdb
+      
+      # Pool configuration optimized for HFT
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 200
+      DEFAULT_POOL_SIZE: 50
+      MIN_POOL_SIZE: 15
+      RESERVE_POOL_SIZE: 10
+      RESERVE_POOL_TIMEOUT: 5
+      MAX_DB_CONNECTIONS: 75
+      MAX_USER_CONNECTIONS: 150
+      
+      # Performance settings
+      SERVER_RESET_QUERY: "DISCARD ALL"
+      SERVER_CHECK_QUERY: "SELECT 1"
+      SERVER_CHECK_DELAY: 30
+      SERVER_FAST_CLOSE: 1
+      SERVER_IDLE_TIMEOUT: 300
+      SERVER_LIFETIME: 1800
+      SERVER_CONNECT_TIMEOUT: 15
+      SERVER_LOGIN_RETRY: 15
+      
+      # Client settings
+      CLIENT_IDLE_TIMEOUT: 300
+      CLIENT_LOGIN_TIMEOUT: 60
+      QUERY_TIMEOUT: 30
+      QUERY_WAIT_TIMEOUT: 120
+      CANCEL_WAIT_TIMEOUT: 10
+      
+      # Logging and monitoring
+      LOG_CONNECTIONS: 1
+      LOG_DISCONNECTIONS: 1
+      LOG_POOLER_ERRORS: 1
+      STATS_PERIOD: 60
+      
+      # Authentication
+      AUTH_TYPE: md5
+      
+      # TCP optimization for HFT
+      TCP_KEEPALIVE: 1
+      TCP_KEEPCNT: 3
+      TCP_KEEPIDLE: 600
+      TCP_KEEPINTVL: 30
+      
+      # Performance tuning
+      PKT_BUF: 4096
+      LISTEN_BACKLOG: 128
+      SBUF_LOOPCNT: 5
+      SUSPEND_TIMEOUT: 10
+      
+    volumes:
+      - ./config/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+      - ./config/userlist.txt:/etc/pgbouncer/userlist.txt:ro
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U tsdbadmin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    
+    networks:
+      - pantherswap-network
+    
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.1'
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # PgBouncer metrics exporter for monitoring
+  pgbouncer-exporter:
+    image: prometheuscommunity/pgbouncer-exporter:v0.7.0
+    container_name: pantherswap-pgbouncer-exporter
+    restart: unless-stopped
+    ports:
+      - "9127:9127"
+    environment:
+      PGBOUNCER_EXPORTER_HOST: pgbouncer
+      PGBOUNCER_EXPORTER_PORT: 5432
+      PGBOUNCER_EXPORTER_USER: tsdbadmin
+      PGBOUNCER_EXPORTER_PASSWORD: sz2eu577bgqi5767
+      PGBOUNCER_EXPORTER_DATABASE: pgbouncer
+    depends_on:
+      - pgbouncer
+    networks:
+      - pantherswap-network
+    
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9127/metrics || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Redis for connection state caching
+  redis-connection-cache:
+    image: redis:7.2-alpine
+    container_name: pantherswap-redis-cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+      --tcp-keepalive 60
+      --timeout 300
+    networks:
+      - pantherswap-network
+    
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
+networks:
+  pantherswap-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  pgbouncer-logs:
+    driver: local

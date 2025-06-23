@@ -1,0 +1,259 @@
+# PantherSwap Edge Production Configuration
+# Optimized for high-performance trading with comprehensive monitoring
+
+[server]
+host = "0.0.0.0"
+port = 8080
+workers = 16
+max_connections = 10000
+keep_alive_timeout = 75
+request_timeout = 30
+enable_compression = true
+enable_http2 = true
+
+[database]
+# TimescaleDB Production Configuration - Optimized for High-Frequency Trading
+url = "postgres://tsdbadmin:sz2eu577bgqi5767@jqrbtbc5nw.w0mq2s13iy.tsdb.cloud.timescale.com:35762/tsdb?sslmode=require"
+max_connections = 75  # Scaled to target range (50-100) for HFT performance
+min_connections = 15  # 20% of max for baseline performance
+connection_timeout = 30
+query_timeout = 30
+idle_timeout = 300
+max_lifetime = 1800
+enable_statement_logging = false
+enable_query_optimization = true
+enable_real_time_monitoring = true
+slow_query_threshold_ms = 1000
+data_retention_days = 14
+enable_performance_metrics = true
+connection_pool_monitoring = true
+# Enhanced connection pool settings for HFT
+acquire_timeout = 5  # Reduced from 10s for faster trading operations
+test_before_acquire = true
+auto_tune_enabled = true
+connection_validation_timeout = 3
+max_connection_age = 1800
+connection_leak_detection = true
+
+[trading_engine]
+enable_live_trading = true
+max_position_size = 1000000.0
+confidence_threshold = 0.75
+max_daily_trades = 5000
+max_portfolio_exposure = 0.85
+risk_check_interval_ms = 100
+market_data_timeout_ms = 1000
+signal_generation_interval_ms = 50
+portfolio_update_interval_ms = 500
+enable_stop_loss = true
+enable_take_profit = true
+emergency_stop_loss_pct = 0.03
+max_correlation_exposure = 0.25
+enable_regime_filtering = true
+
+[risk]
+max_portfolio_var = 0.02  # 2% maximum portfolio VaR
+max_leverage = 3.0
+confidence_threshold = 0.7
+max_daily_loss = 50000.0  # $50,000 maximum daily loss
+drawdown_limit = 0.1  # 10% maximum drawdown
+
+# Performance optimization settings
+enable_lock_free_processing = true
+enable_memory_pool = true
+max_concurrent_orders = 2000
+order_processing_batch_size = 100
+enable_async_risk_checks = true
+target_latency_ms = 5.0
+target_throughput_tps = 2000.0
+enable_performance_monitoring = true
+
+[ai_engine]
+# LSTM Configuration
+lstm_sequence_length = 60
+lstm_hidden_size = 128
+lstm_num_layers = 2
+lstm_dropout = 0.1
+lstm_learning_rate = 0.001
+lstm_batch_size = 64
+lstm_epochs = 100
+lstm_early_stopping_patience = 10
+
+# RL Configuration
+rl_state_size = 50
+rl_action_size = 5
+rl_learning_rate = 0.0001
+rl_epsilon_start = 1.0
+rl_epsilon_end = 0.01
+rl_epsilon_decay = 0.995
+rl_memory_size = 100000
+rl_batch_size = 32
+rl_target_update_frequency = 1000
+
+# HMM Configuration
+hmm_num_states = 4
+hmm_max_iterations = 1000
+hmm_tolerance = 1e-6
+hmm_window_size = 500
+
+[ai_inference]
+max_batch_size = 64
+batch_timeout_ms = 5
+max_latency_ms = 50
+enable_caching = true
+cache_ttl_seconds = 3
+parallel_processing = true
+max_concurrent_inferences = 16
+enable_quantization = true
+quantization_bits = 8
+enable_model_compression = true
+enable_prefetching = true
+prefetch_window_size = 20
+enable_adaptive_batching = true
+warmup_iterations = 200
+
+[market_data]
+providers = ["alpaca", "alpha_vantage"]
+primary_provider = "alpaca"
+alpha_vantage_api_key = "EZDZ4VOFQ2GRA7VU"
+update_interval_ms = 100
+max_symbols = 1000
+enable_real_time = true
+enable_historical_backfill = true
+data_quality_threshold = 0.95
+max_latency_ms = 500
+enable_failover = true
+backup_providers = ["alpha_vantage", "polygon", "iex"]
+
+[market_data.alpaca]
+api_key = "CK6KLMXTNEGGKCMVZA2R"
+secret_key = "vFxGY6FDzr3Kq1XhkSHzrZRFgvDKuEfQj9b6odCR"
+base_url = "https://paper-api.alpaca.markets"
+data_url = "https://data.alpaca.markets"
+paper_trading = true
+enable_streaming = true
+max_positions = 100
+max_order_value = 100000.0
+enable_fractional_shares = true
+rate_limit_per_minute = 200
+connection_timeout_ms = 5000
+retry_attempts = 3
+enable_order_execution = true
+
+[monitoring]
+# Production Monitoring Configuration
+health_check_interval_seconds = 30
+metrics_collection_interval_seconds = 10
+alert_aggregation_window_seconds = 300
+enable_auto_recovery = true
+enable_failover = true
+max_consecutive_failures = 3
+system_health_threshold = 0.8
+enable_performance_profiling = true
+enable_predictive_alerts = true
+
+# AI Performance Monitoring
+ai_drift_detection_window = 1000
+ai_performance_window = 100
+ai_drift_threshold = 0.15
+ai_accuracy_threshold = 0.65
+ai_latency_threshold_ms = 100.0
+ai_monitoring_interval_seconds = 60
+ai_alert_cooldown_minutes = 15
+
+# Database Health Monitoring
+db_check_interval_seconds = 30
+db_metrics_retention_hours = 24
+db_enable_continuous_monitoring = true
+db_enable_alerting = true
+db_max_history_size = 2880
+
+[alerting]
+enable_notifications = true
+alert_cooldown_minutes = 5
+max_alerts_per_hour = 50
+escalation_enabled = true
+escalation_threshold_minutes = 15
+alert_retention_hours = 168
+
+# Notification channels
+[alerting.email]
+enabled = true
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
+username = "alerts@pantherswap.com"
+recipients = ["admin@pantherswap.com", "ops@pantherswap.com"]
+
+[alerting.slack]
+enabled = true
+webhook_url = "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+channel = "#trading-alerts"
+
+[alerting.pagerduty]
+enabled = true
+integration_key = "YOUR_PAGERDUTY_INTEGRATION_KEY"
+service_id = "YOUR_SERVICE_ID"
+
+[logging]
+level = "info"
+format = "json"
+enable_file_logging = true
+log_file = "/var/log/pantherswap/app.log"
+max_file_size = "100MB"
+max_files = 10
+enable_structured_logging = true
+enable_performance_logging = true
+
+[security]
+enable_rate_limiting = true
+rate_limit_requests_per_minute = 1000
+enable_cors = true
+cors_allowed_origins = ["https://app.pantherswap.com"]
+enable_api_key_auth = true
+enable_jwt_auth = true
+jwt_secret = "your-super-secret-jwt-key-change-in-production"
+jwt_expiration_hours = 24
+
+[performance]
+# Memory management
+enable_memory_profiling = true
+max_memory_usage_mb = 8192
+gc_threshold_mb = 1024
+
+# CPU optimization
+enable_cpu_profiling = true
+max_cpu_usage_percent = 80
+thread_pool_size = 32
+
+# Network optimization
+tcp_nodelay = true
+tcp_keepalive = true
+socket_buffer_size = 65536
+
+[failover]
+enable_failover = true
+health_check_timeout_ms = 5000
+failover_threshold_failures = 3
+recovery_check_interval_seconds = 60
+enable_circuit_breaker = true
+circuit_breaker_failure_threshold = 10
+circuit_breaker_timeout_seconds = 60
+
+[backup]
+enable_automated_backup = true
+backup_interval_hours = 6
+backup_retention_days = 30
+backup_location = "/var/backups/pantherswap"
+enable_incremental_backup = true
+enable_compression = true
+
+[deployment]
+environment = "production"
+version = "1.0.0"
+build_timestamp = "2024-01-01T00:00:00Z"
+git_commit = "main"
+enable_health_endpoint = true
+health_endpoint_path = "/health"
+enable_metrics_endpoint = true
+metrics_endpoint_path = "/metrics"
+enable_admin_endpoints = false

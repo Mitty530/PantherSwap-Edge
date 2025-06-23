@@ -1,0 +1,84 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT * FROM ai_predictions\n                WHERE instrument_id = $1 AND model_type = $2\n                ORDER BY timestamp DESC\n                LIMIT $3\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "instrument_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "model_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "model_version",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "prediction_horizon_minutes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 5,
+        "name": "predicted_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "predicted_volatility",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "confidence_score",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "prediction_intervals",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "feature_importance",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "2ad66b9151856d74a03629084ab822ffb09f2ba5e122ad645e8bd7fd8ab558fc"
+}

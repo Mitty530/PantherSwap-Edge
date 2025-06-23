@@ -1,0 +1,309 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pgbouncer-config
+  namespace: pantherswap-edge
+data:
+  pgbouncer.ini: |
+    [databases]
+    pantherswap_edge = host=jqrbtbc5nw.w0mq2s13iy.tsdb.cloud.timescale.com port=35762 dbname=tsdb user=tsdbadmin password=sz2eu577bgqi5767 pool_size=50 max_db_connections=75
+
+    [pgbouncer]
+    # Connection pooling settings optimized for HFT
+    listen_addr = 0.0.0.0
+    listen_port = 5432
+    auth_type = md5
+    auth_file = /etc/pgbouncer/userlist.txt
+    
+    # Pool configuration for high-frequency trading
+    pool_mode = transaction
+    max_client_conn = 200
+    default_pool_size = 50
+    min_pool_size = 15
+    reserve_pool_size = 10
+    reserve_pool_timeout = 5
+    max_db_connections = 75
+    max_user_connections = 150
+    
+    # Performance optimization
+    server_reset_query = DISCARD ALL
+    server_check_query = SELECT 1
+    server_check_delay = 30
+    server_fast_close = 1
+    server_idle_timeout = 300
+    server_lifetime = 1800
+    server_connect_timeout = 15
+    server_login_retry = 15
+    
+    # Client connection settings
+    client_idle_timeout = 300
+    client_login_timeout = 60
+    query_timeout = 30
+    query_wait_timeout = 120
+    cancel_wait_timeout = 10
+    
+    # Logging and monitoring
+    log_connections = 1
+    log_disconnections = 1
+    log_pooler_errors = 1
+    stats_period = 60
+    
+    # Security settings
+    ignore_startup_parameters = extra_float_digits
+    
+    # Advanced settings for HFT performance
+    tcp_keepalive = 1
+    tcp_keepcnt = 3
+    tcp_keepidle = 600
+    tcp_keepintvl = 30
+    tcp_socket_buffer = 0
+    tcp_defer_accept = 0
+    
+    # Memory and resource limits
+    pkt_buf = 4096
+    listen_backlog = 128
+    sbuf_loopcnt = 5
+    suspend_timeout = 10
+    
+  userlist.txt: |
+    "tsdbadmin" "sz2eu577bgqi5767"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: pgbouncer-secret
+  namespace: pantherswap-edge
+type: Opaque
+data:
+  # Base64 encoded credentials
+  username: dHNkYmFkbWlu  # tsdbadmin
+  password: c3oyZXU1NzdibXFpNTc2Nw==  # sz2eu577bgqi5767
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pgbouncer
+  namespace: pantherswap-edge
+  labels:
+    app: pgbouncer
+    component: database-proxy
+spec:
+  replicas: 2  # High availability
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+        component: database-proxy
+    spec:
+      containers:
+      - name: pgbouncer
+        image: pgbouncer/pgbouncer:1.21.0
+        ports:
+        - containerPort: 5432
+          name: postgres
+        - containerPort: 9127
+          name: metrics
+        env:
+        - name: DATABASES_HOST
+          value: "jqrbtbc5nw.w0mq2s13iy.tsdb.cloud.timescale.com"
+        - name: DATABASES_PORT
+          value: "35762"
+        - name: DATABASES_USER
+          valueFrom:
+            secretKeyRef:
+              name: pgbouncer-secret
+              key: username
+        - name: DATABASES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pgbouncer-secret
+              key: password
+        - name: DATABASES_DBNAME
+          value: "tsdb"
+        - name: POOL_MODE
+          value: "transaction"
+        - name: MAX_CLIENT_CONN
+          value: "200"
+        - name: DEFAULT_POOL_SIZE
+          value: "50"
+        - name: MAX_DB_CONNECTIONS
+          value: "75"
+        - name: SERVER_RESET_QUERY
+          value: "DISCARD ALL"
+        - name: AUTH_TYPE
+          value: "md5"
+        - name: STATS_PERIOD
+          value: "60"
+        - name: LOG_CONNECTIONS
+          value: "1"
+        - name: LOG_DISCONNECTIONS
+          value: "1"
+        volumeMounts:
+        - name: pgbouncer-config
+          mountPath: /etc/pgbouncer
+          readOnly: true
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          tcpSocket:
+            port: 5432
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: pgbouncer-config
+        configMap:
+          name: pgbouncer-config
+      securityContext:
+        fsGroup: 999
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - pgbouncer
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer-service
+  namespace: pantherswap-edge
+  labels:
+    app: pgbouncer
+    component: database-proxy
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  - port: 9127
+    targetPort: 9127
+    protocol: TCP
+    name: metrics
+  selector:
+    app: pgbouncer
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pgbouncer-headless
+  namespace: pantherswap-edge
+  labels:
+    app: pgbouncer
+    component: database-proxy
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+    name: postgres
+  selector:
+    app: pgbouncer
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: pgbouncer-pdb
+  namespace: pantherswap-edge
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pgbouncer-metrics
+  namespace: pantherswap-edge
+  labels:
+    app: pgbouncer
+    component: database-proxy
+spec:
+  selector:
+    matchLabels:
+      app: pgbouncer
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: pgbouncer-hpa
+  namespace: pantherswap-edge
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pgbouncer
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 15
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60

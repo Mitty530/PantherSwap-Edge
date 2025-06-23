@@ -1,0 +1,28 @@
+[server]
+port = 8081
+
+[database]
+max_connections = 20
+min_connections = 5
+connection_timeout = 10
+query_timeout = 10
+idle_timeout = 600
+max_lifetime = 3600
+enable_real_time_monitoring = true
+slow_query_threshold_ms = 2000
+data_retention_days = 14
+enable_performance_metrics = true
+connection_pool_monitoring = true
+
+[market_data]
+update_interval_ms = 30000  # Slower updates for development
+instruments = ["EURUSD", "GBPUSD"]  # Fewer instruments for testing
+
+[trading]
+max_position_size = 10000.0  # Smaller positions for testing
+confidence_threshold = 0.5   # Lower threshold for more signals
+
+[api]
+rate_limit_per_minute = 100  # Lower limits for development
+
+debug = true

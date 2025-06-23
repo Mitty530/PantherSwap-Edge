@@ -1,0 +1,79 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            time_bucket($1, timestamp) as time_bucket,\n            instrument_id,\n            first(last_price, timestamp) as open_price,\n            max(last_price) as high_price,\n            min(last_price) as low_price,\n            last(last_price, timestamp) as close_price,\n            avg(last_price) as avg_price,\n            sum(volume) as total_volume,\n            avg(spread) as avg_spread,\n            count(*) as tick_count\n        FROM market_ticks\n        WHERE instrument_id = $2\n        AND timestamp >= $3\n        AND timestamp <= $4\n        AND last_price IS NOT NULL\n        GROUP BY time_bucket, instrument_id\n        ORDER BY time_bucket\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "time_bucket",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "instrument_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "open_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 3,
+        "name": "high_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 4,
+        "name": "low_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "close_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "avg_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "total_volume",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "avg_spread",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 9,
+        "name": "tick_count",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Interval",
+        "Uuid",
+        "Timestamptz",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      null,
+      false,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "a1024cca840e21ad00358d96ee799ecc9233e7a625c6e3271be3a4bb0304ee4e"
+}

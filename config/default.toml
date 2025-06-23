@@ -1,0 +1,97 @@
+[server]
+host = "0.0.0.0"
+port = 8080
+workers = 4
+
+[database]
+url = "postgres://tsdbadmin:sz2eu577bgqi5767@jqrbtbc5nw.w0mq2s13iy.tsdb.cloud.timescale.com:35762/tsdb?sslmode=require"
+max_connections = 100
+min_connections = 10
+connection_timeout = 30
+query_timeout = 5  # 5 second query timeout for production
+idle_timeout = 300
+max_lifetime = 1800
+enable_real_time_monitoring = true
+slow_query_threshold_ms = 1000
+data_retention_days = 14
+enable_performance_metrics = true
+connection_pool_monitoring = true
+
+[market_data]
+providers = ["ig_trading", "alpaca", "alpha_vantage"]
+primary_provider = "ig_trading"  # Use IG Trading as primary provider
+instruments = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "SPY", "QQQ", "META", "AMZN", "NFLX"]
+update_interval_ms = 1000   # 1 second for real-time trading
+max_retries = 3
+timeout_ms = 5000
+quality_threshold = 0.9
+alpha_vantage_api_key = "EZDZ4VOFQ2GRA7VU"  # Production API key (fallback)
+iex_cloud_api_key = ""      # Set via environment variable
+
+[market_data.alpaca]
+api_key = "CKG0KGXSOGQ9JG8MJTVY"
+secret_key = "cuqp56NLVarz0Lgo5bCn1vrxVI9i7bFazb4Dn7bl"
+base_url = "https://paper-api.alpaca.markets"  # Paper trading environment for safety
+data_url = "https://data.alpaca.markets"
+paper_trading = true
+enable_streaming = true
+max_positions = 100
+max_order_value = 100000.0
+enable_fractional_shares = true
+rate_limit_per_minute = 200  # Alpaca rate limits
+connection_timeout_ms = 5000
+retry_attempts = 3
+enable_order_execution = true
+
+[market_data.ig_trading]
+api_key = "3ded3ba7db96187488bf8773b86bdf3e8fc42e9b"
+security_token = "1206a1630c34bcc90fdcc1b62fc5920fa7ed3a216ae09933430d3de2c6bcf6CD01112"
+cst = "48417021199921da08b95b210d8f9492c36614232983a9f1f3e1a8f0748ce33CC01113"
+version = "2"
+base_url = "https://demo-api.ig.com/gateway/deal"  # Demo environment for safety
+content_type = "application/json; charset=UTF-8"
+accept = "application/json; charset=UTF-8"
+enable_streaming = true
+max_positions = 200
+max_order_value = 500000.0
+rate_limit_per_minute = 100  # IG rate limits
+connection_timeout_ms = 5000
+retry_attempts = 3
+enable_order_execution = true
+demo_mode = true  # Use demo environment for safety
+
+[trading]
+enable_live_trading = true  # Enable live trading for demonstration
+signal_generation_interval_ms = 1000
+risk_check_interval_ms = 500
+max_position_size = 100000.0
+confidence_threshold = 0.7
+strategy_types = [
+    "predictive_market_making",
+    "microstructure_momentum", 
+    "regime_arbitrage",
+    "liquidity_harvesting"
+]
+
+[ai]
+enable_predictions = true
+model_path = "./models/"
+model_update_interval_hours = 24
+prediction_horizons_minutes = [1, 5, 15, 60]
+enable_training = false  # Disable for MVP
+training_batch_size = 64
+
+[risk]
+max_portfolio_var = 0.02  # 2%
+max_leverage = 3.0
+confidence_threshold = 0.7
+max_daily_loss = 50000.0
+drawdown_limit = 0.1  # 10%
+
+[api]
+rate_limit_per_minute = 1000
+enable_cors = true
+max_request_size = 1048576  # 1MB
+api_key_header = "X-API-Key"
+
+debug = false

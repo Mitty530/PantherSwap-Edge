@@ -1,0 +1,38 @@
+apiVersion: v2
+name: pantherswap-edge
+description: A Helm chart for PantherSwap Edge - Market Microstructure Intelligence Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - trading
+  - fintech
+  - ai
+  - microstructure
+  - timescaledb
+home: https://github.com/pantherswap/pantherswap-edge
+sources:
+  - https://github.com/pantherswap/pantherswap-edge
+maintainers:
+  - name: PantherSwap Team
+    email: team@pantherswap.com
+dependencies:
+  - name: postgresql
+    version: "12.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "17.x.x"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+  - name: prometheus
+    version: "15.x.x"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: monitoring.prometheus.enabled
+  - name: grafana
+    version: "6.x.x"
+    repository: https://grafana.github.io/helm-charts
+    condition: monitoring.grafana.enabled
+annotations:
+  category: Trading Platform
+  licenses: MIT

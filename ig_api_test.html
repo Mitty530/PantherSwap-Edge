@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IG Trading API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .config {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 IG Trading API Connectivity Test</h1>
+        
+        <div class="config">
+            <h3>📋 Configuration</h3>
+            <p><strong>API Key:</strong> 3ded3ba7...8fc42e9b</p>
+            <p><strong>Base URL:</strong> https://demo-api.ig.com/gateway/deal</p>
+            <p><strong>Version:</strong> 2</p>
+            <p><strong>Mode:</strong> Demo (Safe Testing)</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Test 1: Basic API Connectivity</h3>
+            <p>Tests if the IG Trading API endpoint is reachable.</p>
+            <button onclick="testBasicConnectivity()">Run Basic Test</button>
+            <div id="basic-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Test 2: Authentication Endpoint</h3>
+            <p>Tests the authentication endpoint response.</p>
+            <button onclick="testAuthentication()">Run Auth Test</button>
+            <div id="auth-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📈 Test 3: Market Data</h3>
+            <p>Tests market data retrieval for EUR/USD.</p>
+            <button onclick="testMarketData()">Run Market Data Test</button>
+            <div id="market-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Summary</h3>
+            <div id="summary" class="result">Click the test buttons above to run connectivity tests.</div>
+        </div>
+    </div>
+
+    <script>
+        const config = {
+            apiKey: "3ded3ba7db96187488bf8773b86bdf3e8fc42e9b",
+            securityToken: "1206a1630c34bcc90fdcc1b62fc5920fa7ed3a216ae09933430d3de2c6bcf6CD01112",
+            cst: "48417021199921da08b95b210d8f9492c36614232983a9f1f3e1a8f0748ce33CC01113",
+            version: "2",
+            baseUrl: "https://demo-api.ig.com/gateway/deal",
+            contentType: "application/json; charset=UTF-8",
+            accept: "application/json; charset=UTF-8"
+        };
+
+        let testResults = {
+            basic: null,
+            auth: null,
+            market: null
+        };
+
+        function updateResult(elementId, success, message, details = '') {
+            const element = document.getElementById(elementId);
+            const status = success ? '✅ SUCCESS' : '❌ FAILED';
+            const className = success ? 'success' : 'error';
+            
+            element.className = `result ${className}`;
+            element.textContent = `${status}: ${message}\n${details}`;
+            
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const results = Object.values(testResults);
+            const completed = results.filter(r => r !== null).length;
+            const passed = results.filter(r => r === true).length;
+            
+            if (completed === 0) {
+                summary.textContent = "Click the test buttons above to run connectivity tests.";
+                summary.className = "result";
+            } else {
+                const status = passed >= 2 ? '🎉 OVERALL: GOOD' : '⚠️ OVERALL: NEEDS ATTENTION';
+                summary.textContent = `${status}\nTests Completed: ${completed}/3\nTests Passed: ${passed}/${completed}`;
+                summary.className = `result ${passed >= 2 ? 'success' : 'warning'}`;
+            }
+        }
+
+        async function testBasicConnectivity() {
+            const resultElement = document.getElementById('basic-result');
+            resultElement.textContent = "🔄 Testing basic connectivity...";
+            resultElement.className = "result warning";
+
+            try {
+                const response = await fetch(`${config.baseUrl}/session`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': config.contentType,
+                        'Accept': config.accept,
+                        'X-IG-API-KEY': config.apiKey,
+                        'Version': config.version
+                    },
+                    mode: 'cors'
+                });
+
+                const responseText = await response.text();
+                
+                if (response.status === 200 || response.status === 401 || response.status === 403) {
+                    testResults.basic = true;
+                    updateResult('basic-result', true, 
+                        `API endpoint is reachable (Status: ${response.status})`,
+                        `Response: ${responseText.substring(0, 200)}...`);
+                } else {
+                    testResults.basic = false;
+                    updateResult('basic-result', false, 
+                        `Unexpected status code: ${response.status}`,
+                        `Response: ${responseText}`);
+                }
+            } catch (error) {
+                testResults.basic = false;
+                updateResult('basic-result', false, 
+                    'Connection failed',
+                    `Error: ${error.message}\n\nNote: CORS errors are expected when testing from browser. This indicates the API endpoint exists but requires server-side requests.`);
+            }
+        }
+
+        async function testAuthentication() {
+            const resultElement = document.getElementById('auth-result');
+            resultElement.textContent = "🔄 Testing authentication endpoint...";
+            resultElement.className = "result warning";
+
+            try {
+                const authData = {
+                    identifier: "",
+                    password: "",
+                    encryptedPassword: false
+                };
+
+                const response = await fetch(`${config.baseUrl}/session`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': config.contentType,
+                        'Accept': config.accept,
+                        'X-IG-API-KEY': config.apiKey,
+                        'Version': config.version
+                    },
+                    body: JSON.stringify(authData),
+                    mode: 'cors'
+                });
+
+                const responseText = await response.text();
+
+                if (response.status === 401) {
+                    testResults.auth = true;
+                    updateResult('auth-result', true, 
+                        'Authentication endpoint working correctly (401 - credentials needed)',
+                        `Response: ${responseText.substring(0, 300)}...`);
+                } else if (response.status === 200) {
+                    testResults.auth = true;
+                    updateResult('auth-result', true, 
+                        'Authentication successful!',
+                        `Response: ${responseText.substring(0, 300)}...`);
+                } else {
+                    testResults.auth = false;
+                    updateResult('auth-result', false, 
+                        `Unexpected authentication response: ${response.status}`,
+                        `Response: ${responseText}`);
+                }
+            } catch (error) {
+                testResults.auth = false;
+                updateResult('auth-result', false, 
+                    'Authentication test failed',
+                    `Error: ${error.message}\n\nNote: CORS errors are expected when testing from browser.`);
+            }
+        }
+
+        async function testMarketData() {
+            const resultElement = document.getElementById('market-result');
+            resultElement.textContent = "🔄 Testing market data retrieval...";
+            resultElement.className = "result warning";
+
+            const instrument = "CS.D.EURUSD.MINI.IP";
+
+            try {
+                const response = await fetch(`${config.baseUrl}/markets/${instrument}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': config.contentType,
+                        'Accept': config.accept,
+                        'X-IG-API-KEY': config.apiKey,
+                        'Version': config.version,
+                        'CST': config.cst,
+                        'X-SECURITY-TOKEN': config.securityToken
+                    },
+                    mode: 'cors'
+                });
+
+                const responseText = await response.text();
+
+                if (response.status === 200) {
+                    testResults.market = true;
+                    updateResult('market-result', true, 
+                        `Market data retrieved for ${instrument}`,
+                        `Response: ${responseText.substring(0, 200)}...`);
+                } else if (response.status === 401) {
+                    testResults.market = false;
+                    updateResult('market-result', false, 
+                        'Authentication required for market data',
+                        `Status: ${response.status}\nResponse: ${responseText}`);
+                } else {
+                    testResults.market = false;
+                    updateResult('market-result', false, 
+                        `Market data test failed (Status: ${response.status})`,
+                        `Response: ${responseText}`);
+                }
+            } catch (error) {
+                testResults.market = false;
+                updateResult('market-result', false, 
+                    'Market data request failed',
+                    `Error: ${error.message}\n\nNote: CORS errors are expected when testing from browser.`);
+            }
+        }
+
+        // Initialize
+        updateSummary();
+    </script>
+</body>
+</html>

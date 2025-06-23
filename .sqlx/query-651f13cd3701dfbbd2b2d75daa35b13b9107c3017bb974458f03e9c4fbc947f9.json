@@ -1,0 +1,82 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM instruments WHERE id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "symbol",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "instrument_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "base_currency",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "quote_currency",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "tick_size",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "lot_size",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "651f13cd3701dfbbd2b2d75daa35b13b9107c3017bb974458f03e9c4fbc947f9"
+}

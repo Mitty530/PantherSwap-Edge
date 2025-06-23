@@ -1,0 +1,92 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                SELECT timestamp, instrument_id, strategy_type, signal_type, confidence_score,\n                       target_price, stop_loss, take_profit, position_size, risk_score,\n                       time_horizon, metadata, created_at\n                FROM trading_signals\n                WHERE timestamp >= NOW() - INTERVAL '24 hours'\n                ORDER BY timestamp DESC LIMIT 100\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "timestamp",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 1,
+        "name": "instrument_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 2,
+        "name": "strategy_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "signal_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "confidence_score",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 5,
+        "name": "target_price",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "stop_loss",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "take_profit",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "position_size",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 9,
+        "name": "risk_score",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 10,
+        "name": "time_horizon",
+        "type_info": "Interval"
+      },
+      {
+        "ordinal": 11,
+        "name": "metadata",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 12,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "11e3a5237cde24294ad3ad39c6c86d00a954dcc799ff54f1af6fbe4e7a84bf4a"
+}

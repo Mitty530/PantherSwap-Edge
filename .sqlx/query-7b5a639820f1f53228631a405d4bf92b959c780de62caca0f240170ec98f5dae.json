@@ -1,0 +1,80 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT * FROM instruments WHERE is_active = true ORDER BY symbol",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "symbol",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 3,
+        "name": "instrument_type",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 4,
+        "name": "base_currency",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 5,
+        "name": "quote_currency",
+        "type_info": "Varchar"
+      },
+      {
+        "ordinal": 6,
+        "name": "tick_size",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 7,
+        "name": "lot_size",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 8,
+        "name": "is_active",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "7b5a639820f1f53228631a405d4bf92b959c780de62caca0f240170ec98f5dae"
+}

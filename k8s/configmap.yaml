@@ -1,0 +1,130 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pantherswap-edge-config
+  namespace: pantherswap-edge
+  labels:
+    app.kubernetes.io/name: pantherswap-edge
+    app.kubernetes.io/component: config
+data:
+  production.toml: |
+    [server]
+    host = "0.0.0.0"
+    port = 8080
+    workers = 8
+
+    [database]
+    pool_size = 100
+    connection_timeout_ms = 3000
+    query_timeout_ms = 5000
+
+    [market_data]
+    update_interval_ms = 100
+    max_symbols = 1000
+    enable_real_time = true
+    enable_historical_backfill = true
+    data_quality_threshold = 0.95
+    max_latency_ms = 500
+    enable_failover = true
+    backup_providers = ["polygon", "iex"]
+
+    [trading]
+    enable_live_trading = true
+    signal_generation_interval_ms = 500
+    risk_check_interval_ms = 250
+    max_position_size = 1000000.0
+    confidence_threshold = 0.8
+    enable_regime_filtering = true
+    enable_lock_free_processing = true
+    enable_memory_pool = true
+    max_concurrent_orders = 2000
+    order_processing_batch_size = 100
+    enable_async_risk_checks = true
+    target_latency_ms = 5.0
+    target_throughput_tps = 2000.0
+    enable_performance_monitoring = true
+
+    [ai]
+    enable_predictions = true
+    enable_training = true
+    model_update_interval_hours = 6
+    prediction_horizons_minutes = [1, 5, 15, 60]
+    training_batch_size = 128
+
+    [ai_inference]
+    max_batch_size = 64
+    batch_timeout_ms = 5
+    max_latency_ms = 50
+    enable_caching = true
+    cache_ttl_seconds = 3
+    parallel_processing = true
+    max_concurrent_inferences = 16
+    enable_quantization = true
+    quantization_bits = 8
+    enable_model_compression = true
+    enable_prefetching = true
+    prefetch_window_size = 20
+    enable_adaptive_batching = true
+    warmup_iterations = 200
+
+    [monitoring]
+    health_check_interval_seconds = 30
+    metrics_collection_interval_seconds = 10
+    alert_aggregation_window_seconds = 300
+    enable_auto_recovery = true
+    enable_failover = true
+    max_consecutive_failures = 3
+    system_health_threshold = 0.8
+    enable_performance_profiling = true
+    enable_predictive_alerts = true
+
+    [api]
+    rate_limit_per_minute = 10000
+    enable_cors = true
+    max_request_size = 1048576
+    api_key_header = "X-API-Key"
+
+    [risk]
+    max_portfolio_var = 0.02
+    max_leverage = 3.0
+    confidence_threshold = 0.8
+    max_daily_loss = 100000.0
+    drawdown_limit = 0.1
+
+    debug = false
+
+  logging.yaml: |
+    appenders:
+      stdout:
+        kind: console
+        encoder:
+          pattern: "{d(%Y-%m-%d %H:%M:%S)} [{l}] {M}: {m}{n}"
+      file:
+        kind: rolling_file
+        path: "/var/log/pantherswap-edge/app.log"
+        encoder:
+          pattern: "{d(%Y-%m-%d %H:%M:%S)} [{l}] {t} {M}: {m}{n}"
+        policy:
+          kind: compound
+          size:
+            limit: 100mb
+          time:
+            pattern: daily
+          fixed_window:
+            count: 10
+
+    root:
+      level: info
+      appenders:
+        - stdout
+        - file
+
+    loggers:
+      pantherswap_edge:
+        level: info
+      sqlx:
+        level: warn
+      hyper:
+        level: warn
+      tower_http:
+        level: info
